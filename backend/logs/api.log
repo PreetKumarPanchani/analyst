@@ -1,0 +1,331 @@
+2025-03-10 02:21:46,014 - sheffield_sales_forecast.api - INFO - Request GET /
+2025-03-10 02:21:46,014 - sheffield_sales_forecast.api - INFO - Response GET / completed in 0.000s with status 200
+2025-03-10 02:22:00,757 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/docs
+2025-03-10 02:22:00,757 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/docs completed in 0.000s with status 200
+2025-03-10 02:22:01,490 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/openapi.json
+2025-03-10 02:22:01,515 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/openapi.json completed in 0.024s with status 200
+2025-03-10 02:22:19,176 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/companies
+2025-03-10 02:22:19,185 - sheffield_sales_forecast.api - INFO - Request for list of companies
+2025-03-10 02:22:19,185 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/companies completed in 0.008s with status 200
+2025-03-10 02:22:51,390 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/categories/cpl
+2025-03-10 02:22:51,393 - sheffield_sales_forecast.api - INFO - Request for categories for company: cpl
+2025-03-10 02:22:51,567 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/categories/cpl completed in 0.178s with status 200
+2025-03-10 02:23:09,415 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/categories/forge
+2025-03-10 02:23:09,415 - sheffield_sales_forecast.api - INFO - Request for categories for company: forge
+2025-03-10 02:23:09,502 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/categories/forge completed in 0.088s with status 200
+2025-03-10 02:23:49,931 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/products/cpl
+2025-03-10 02:23:49,931 - sheffield_sales_forecast.api - INFO - Request for products for company: cpl
+2025-03-10 02:23:50,012 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/products/cpl completed in 0.080s with status 200
+2025-03-10 02:24:15,301 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/products/cpl
+2025-03-10 02:24:15,301 - sheffield_sales_forecast.api - INFO - Request for products for company: cpl
+2025-03-10 02:24:15,390 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/products/cpl completed in 0.089s with status 200
+2025-03-10 02:24:29,432 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/products/forge
+2025-03-10 02:24:29,432 - sheffield_sales_forecast.api - INFO - Request for products for company: forge
+2025-03-10 02:24:29,512 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/products/forge completed in 0.080s with status 200
+2025-03-10 02:24:39,628 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/products/forge
+2025-03-10 02:24:39,628 - sheffield_sales_forecast.api - INFO - Request for products for company: forge
+2025-03-10 02:24:39,716 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/products/forge completed in 0.089s with status 200
+2025-03-10 02:24:51,392 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/products/forge
+2025-03-10 02:24:51,392 - sheffield_sales_forecast.api - INFO - Request for products for company: forge
+2025-03-10 02:24:51,488 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/products/forge completed in 0.096s with status 200
+2025-03-10 02:25:27,896 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/products/forge
+2025-03-10 02:25:27,904 - sheffield_sales_forecast.api - INFO - Request for products for company: forge
+2025-03-10 02:25:28,098 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/products/forge completed in 0.202s with status 200
+2025-03-10 02:25:41,596 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/products/forge
+2025-03-10 02:25:41,596 - sheffield_sales_forecast.api - INFO - Request for products for company: forge
+2025-03-10 02:25:41,693 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/products/forge completed in 0.097s with status 200
+2025-03-10 02:25:49,658 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/products/forge
+2025-03-10 02:25:49,658 - sheffield_sales_forecast.api - INFO - Request for products for company: forge
+2025-03-10 02:25:49,762 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/products/forge completed in 0.104s with status 200
+2025-03-10 02:25:54,669 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/products/forge
+2025-03-10 02:25:54,670 - sheffield_sales_forecast.api - INFO - Request for products for company: forge
+2025-03-10 02:25:54,739 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/products/forge completed in 0.072s with status 200
+2025-03-10 02:26:19,253 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/top-products/cpl
+2025-03-10 02:26:19,261 - sheffield_sales_forecast.api - INFO - Request for top products for company: cpl
+2025-03-10 02:26:19,360 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/top-products/cpl completed in 0.107s with status 200
+2025-03-10 02:27:09,602 - sheffield_sales_forecast.api - INFO - Request POST /api/v1/sales/process/forge
+2025-03-10 02:27:09,602 - sheffield_sales_forecast.api - INFO - Request to process data for company: forge
+2025-03-10 02:29:21,245 - sheffield_sales_forecast.api - INFO - Response POST /api/v1/sales/process/forge completed in 131.643s with status 200
+2025-03-10 02:29:31,412 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/forecasts/category/forge/Bread
+2025-03-10 02:29:31,416 - sheffield_sales_forecast.api - INFO - Request for category forecast for company: forge, category: Bread
+2025-03-10 02:29:33,194 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/forecasts/category/forge/Bread completed in 1.782s with status 200
+2025-03-10 02:30:57,884 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/top-products/forge
+2025-03-10 02:30:57,887 - sheffield_sales_forecast.api - INFO - Request for top products for company: forge
+2025-03-10 02:30:57,970 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/top-products/forge completed in 0.086s with status 200
+2025-03-10 02:31:46,044 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/forecasts/category/forge/Bread
+2025-03-10 02:31:46,051 - sheffield_sales_forecast.api - INFO - Request for category forecast for company: forge, category: Bread
+2025-03-10 02:31:46,075 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/forecasts/category/forge/Bread completed in 0.032s with status 200
+2025-03-10 02:32:30,384 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/forecasts/product/forge/Latte
+2025-03-10 02:32:30,384 - sheffield_sales_forecast.api - INFO - Request for product forecast for company: forge, product: Latte
+2025-03-10 02:32:32,015 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/forecasts/product/forge/Latte completed in 1.631s with status 200
+2025-03-10 09:17:30,399 - sheffield_sales_forecast.api - INFO - Request GET /forecasts/revenue/forge
+2025-03-10 09:17:30,399 - sheffield_sales_forecast.api - INFO - Response GET /forecasts/revenue/forge completed in 0.000s with status 404
+2025-03-10 09:17:30,429 - sheffield_sales_forecast.api - INFO - Request GET /forecasts/revenue/forge
+2025-03-10 09:17:30,431 - sheffield_sales_forecast.api - INFO - Response GET /forecasts/revenue/forge completed in 0.002s with status 404
+2025-03-10 09:17:39,646 - sheffield_sales_forecast.api - INFO - Request GET /forecasts/revenue/forge
+2025-03-10 09:17:39,647 - sheffield_sales_forecast.api - INFO - Response GET /forecasts/revenue/forge completed in 0.001s with status 404
+2025-03-10 09:17:39,668 - sheffield_sales_forecast.api - INFO - Request GET /forecasts/revenue/forge
+2025-03-10 09:17:39,670 - sheffield_sales_forecast.api - INFO - Response GET /forecasts/revenue/forge completed in 0.002s with status 404
+2025-03-10 09:18:11,669 - sheffield_sales_forecast.api - INFO - Request GET /forecasts/revenue/forge
+2025-03-10 09:18:11,669 - sheffield_sales_forecast.api - INFO - Response GET /forecasts/revenue/forge completed in 0.000s with status 404
+2025-03-10 09:18:28,020 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/forecasts/revenue/forge
+2025-03-10 09:18:28,025 - sheffield_sales_forecast.api - INFO - Request for revenue forecast for company: forge
+2025-03-10 09:18:32,951 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/forecasts/revenue/forge completed in 4.932s with status 200
+2025-03-10 09:19:50,869 - sheffield_sales_forecast.api - INFO - Request GET /forecasts/revenue/forge
+2025-03-10 09:19:50,871 - sheffield_sales_forecast.api - INFO - Response GET /forecasts/revenue/forge completed in 0.003s with status 404
+2025-03-10 09:19:50,891 - sheffield_sales_forecast.api - INFO - Request GET /forecasts/revenue/forge
+2025-03-10 09:19:50,893 - sheffield_sales_forecast.api - INFO - Response GET /forecasts/revenue/forge completed in 0.003s with status 404
+2025-03-10 09:23:12,645 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/forecasts/revenue/forge
+2025-03-10 09:23:12,646 - sheffield_sales_forecast.api - INFO - Request for revenue forecast for company: forge
+2025-03-10 09:23:14,015 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/forecasts/revenue/forge completed in 1.371s with status 200
+2025-03-10 09:46:10,342 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/forecasts/revenue/cpl
+2025-03-10 09:46:10,358 - sheffield_sales_forecast.api - INFO - Request for revenue forecast for company: cpl
+2025-03-10 09:46:13,773 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/forecasts/revenue/cpl completed in 3.432s with status 200
+2025-03-10 09:46:13,801 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/forecasts/revenue/cpl
+2025-03-10 09:46:13,804 - sheffield_sales_forecast.api - INFO - Request for revenue forecast for company: cpl
+2025-03-10 09:46:17,130 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/forecasts/revenue/cpl completed in 3.329s with status 200
+2025-03-10 09:47:08,820 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/forecasts/category/cpl
+2025-03-10 09:47:08,822 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/forecasts/category/cpl completed in 0.002s with status 404
+2025-03-10 09:56:19,338 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/v1/sales/companies
+2025-03-10 09:56:19,341 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/v1/sales/categories/forge
+2025-03-10 09:56:19,342 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/v1/sales/companies completed in 0.004s with status 404
+2025-03-10 09:56:19,345 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/v1/sales/categories/forge completed in 0.004s with status 404
+2025-03-10 09:56:19,365 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/v1/sales/companies
+2025-03-10 09:56:19,368 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/v1/sales/companies completed in 0.003s with status 404
+2025-03-10 09:56:19,370 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/v1/sales/categories/forge
+2025-03-10 09:56:19,372 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/v1/sales/categories/forge completed in 0.002s with status 404
+2025-03-10 10:05:30,417 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/categories/forge
+2025-03-10 10:05:30,425 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/companies
+2025-03-10 10:05:30,473 - sheffield_sales_forecast.api - INFO - Request for categories for company: forge
+2025-03-10 10:05:30,884 - sheffield_sales_forecast.api - INFO - Request for list of companies
+2025-03-10 10:05:30,884 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/categories/forge completed in 0.467s with status 200
+2025-03-10 10:05:30,892 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/companies completed in 0.467s with status 200
+2025-03-10 10:05:30,924 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/categories/forge
+2025-03-10 10:05:30,924 - sheffield_sales_forecast.api - INFO - Request for categories for company: forge
+2025-03-10 10:05:31,061 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/categories/forge completed in 0.137s with status 200
+2025-03-10 10:05:31,069 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/companies
+2025-03-10 10:05:31,069 - sheffield_sales_forecast.api - INFO - Request for list of companies
+2025-03-10 10:05:31,069 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/companies completed in 0.000s with status 200
+2025-03-10 10:05:31,808 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/products/forge
+2025-03-10 10:05:31,824 - sheffield_sales_forecast.api - INFO - Request for products for company: forge
+2025-03-10 10:05:31,948 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/products/forge completed in 0.140s with status 200
+2025-03-10 10:05:31,970 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/products/forge
+2025-03-10 10:05:31,970 - sheffield_sales_forecast.api - INFO - Request for products for company: forge
+2025-03-10 10:05:32,074 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/products/forge completed in 0.104s with status 200
+2025-03-10 10:05:32,074 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/top-products/forge
+2025-03-10 10:05:32,083 - sheffield_sales_forecast.api - INFO - Request for top products for company: forge
+2025-03-10 10:05:32,218 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/top-products/forge completed in 0.144s with status 200
+2025-03-10 10:05:32,242 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/top-products/forge
+2025-03-10 10:05:32,251 - sheffield_sales_forecast.api - INFO - Request for top products for company: forge
+2025-03-10 10:05:32,363 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/top-products/forge completed in 0.121s with status 200
+2025-03-10 10:07:25,359 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/top-products/forge
+2025-03-10 10:07:25,367 - sheffield_sales_forecast.api - INFO - Request for top products for company: forge
+2025-03-10 10:07:25,705 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/top-products/forge completed in 0.346s with status 200
+2025-03-10 10:07:49,973 - sheffield_sales_forecast.api - INFO - Request GET /
+2025-03-10 10:07:49,988 - sheffield_sales_forecast.api - INFO - Response GET / completed in 0.016s with status 200
+2025-03-10 10:10:37,103 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/companies
+2025-03-10 10:10:37,103 - sheffield_sales_forecast.api - INFO - Request for list of companies
+2025-03-10 10:10:37,103 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/companies completed in 0.000s with status 200
+2025-03-10 10:10:37,111 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/categories/cpl
+2025-03-10 10:10:37,111 - sheffield_sales_forecast.api - INFO - Request for categories for company: cpl
+2025-03-10 10:10:37,271 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/categories/cpl completed in 0.160s with status 200
+2025-03-10 10:10:37,271 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/companies
+2025-03-10 10:10:37,271 - sheffield_sales_forecast.api - INFO - Request for list of companies
+2025-03-10 10:10:37,279 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/companies completed in 0.008s with status 200
+2025-03-10 10:10:37,295 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/categories/cpl
+2025-03-10 10:10:37,303 - sheffield_sales_forecast.api - INFO - Request for categories for company: cpl
+2025-03-10 10:10:37,415 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/categories/cpl completed in 0.120s with status 200
+2025-03-10 10:10:37,423 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/products/cpl
+2025-03-10 10:10:37,423 - sheffield_sales_forecast.api - INFO - Request for products for company: cpl
+2025-03-10 10:10:37,560 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/products/cpl completed in 0.137s with status 200
+2025-03-10 10:10:37,584 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/products/cpl
+2025-03-10 10:10:37,584 - sheffield_sales_forecast.api - INFO - Request for products for company: cpl
+2025-03-10 10:10:37,720 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/products/cpl completed in 0.136s with status 200
+2025-03-10 10:10:37,728 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/top-products/cpl
+2025-03-10 10:10:37,728 - sheffield_sales_forecast.api - INFO - Request for top products for company: cpl
+2025-03-10 10:10:37,872 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/top-products/cpl completed in 0.152s with status 200
+2025-03-10 10:10:37,912 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/top-products/cpl
+2025-03-10 10:10:37,912 - sheffield_sales_forecast.api - INFO - Request for top products for company: cpl
+2025-03-10 10:10:38,033 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/top-products/cpl completed in 0.120s with status 200
+2025-03-10 11:36:41,812 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/docs
+2025-03-10 11:36:41,826 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/docs completed in 0.014s with status 200
+2025-03-10 11:36:42,195 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/openapi.json
+2025-03-10 11:36:43,022 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/openapi.json completed in 0.827s with status 200
+2025-03-10 11:39:18,174 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/categories/cpl
+2025-03-10 11:39:18,182 - sheffield_sales_forecast.api - INFO - Request for categories for company: cpl
+2025-03-10 11:39:18,295 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/companies
+2025-03-10 11:39:18,303 - sheffield_sales_forecast.api - INFO - Request for list of companies
+2025-03-10 11:39:18,305 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/categories/cpl completed in 0.130s with status 200
+2025-03-10 11:39:18,305 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/companies completed in 0.010s with status 200
+2025-03-10 11:39:18,335 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/categories/cpl
+2025-03-10 11:39:18,335 - sheffield_sales_forecast.api - INFO - Request for categories for company: cpl
+2025-03-10 11:39:18,439 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/companies
+2025-03-10 11:39:18,439 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/categories/cpl completed in 0.104s with status 200
+2025-03-10 11:39:18,447 - sheffield_sales_forecast.api - INFO - Request for list of companies
+2025-03-10 11:39:18,447 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/companies completed in 0.008s with status 200
+2025-03-10 11:39:18,608 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/products/cpl
+2025-03-10 11:39:18,608 - sheffield_sales_forecast.api - INFO - Request for products for company: cpl
+2025-03-10 11:39:18,745 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/products/cpl completed in 0.137s with status 200
+2025-03-10 11:39:18,769 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/products/cpl
+2025-03-10 11:39:18,769 - sheffield_sales_forecast.api - INFO - Request for products for company: cpl
+2025-03-10 11:39:18,897 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/products/cpl completed in 0.128s with status 200
+2025-03-10 11:39:18,897 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/top-products/cpl
+2025-03-10 11:39:18,905 - sheffield_sales_forecast.api - INFO - Request for top products for company: cpl
+2025-03-10 11:39:19,041 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/top-products/cpl completed in 0.144s with status 200
+2025-03-10 11:39:19,057 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/top-products/cpl
+2025-03-10 11:39:19,065 - sheffield_sales_forecast.api - INFO - Request for top products for company: cpl
+2025-03-10 11:39:19,193 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/top-products/cpl completed in 0.136s with status 200
+2025-03-10 11:39:56,558 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/forecasts/revenue/cpl
+2025-03-10 11:39:56,559 - sheffield_sales_forecast.api - INFO - Request for revenue forecast for company: cpl
+2025-03-10 11:39:56,569 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/forecasts/revenue/cpl completed in 0.011s with status 200
+2025-03-10 11:39:56,623 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/forecasts/insights/cpl
+2025-03-10 11:39:56,627 - sheffield_sales_forecast.api - INFO - Request for forecast insights for company: cpl
+2025-03-10 11:40:27,268 - sheffield_sales_forecast.api - ERROR - Error generating forecast insights: list index out of range
+2025-03-10 11:40:27,291 - sheffield_sales_forecast.api - ERROR - Traceback (most recent call last):
+  File "C:\Users\preet\Downloads\Liquid_SCM\Code\sheffield_sales_forcast\backend\app\api\routes\forecasts.py", line 148, in get_forecast_insights
+    "start": revenue_forecast["dates"][len(revenue_forecast["actuals"])],
+IndexError: list index out of range
+
+2025-03-10 11:40:27,293 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/forecasts/insights/cpl completed in 30.670s with status 500
+2025-03-10 11:49:25,632 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/companies
+2025-03-10 11:49:25,632 - sheffield_sales_forecast.api - INFO - Request for list of companies
+2025-03-10 11:49:25,640 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/categories/forge
+2025-03-10 11:49:25,640 - sheffield_sales_forecast.api - INFO - Request for categories for company: forge
+2025-03-10 11:49:25,809 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/companies completed in 0.177s with status 200
+2025-03-10 11:49:25,809 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/categories/forge completed in 0.169s with status 200
+2025-03-10 11:49:25,849 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/companies
+2025-03-10 11:49:25,852 - sheffield_sales_forecast.api - INFO - Request for list of companies
+2025-03-10 11:49:25,852 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/categories/forge
+2025-03-10 11:49:25,857 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/companies completed in 0.008s with status 200
+2025-03-10 11:49:25,857 - sheffield_sales_forecast.api - INFO - Request for categories for company: forge
+2025-03-10 11:49:26,018 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/categories/forge completed in 0.166s with status 200
+2025-03-10 11:49:26,300 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/products/forge
+2025-03-10 11:49:26,304 - sheffield_sales_forecast.api - INFO - Request for products for company: forge
+2025-03-10 11:49:26,648 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/products/forge completed in 0.348s with status 200
+2025-03-10 11:49:26,696 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/products/forge
+2025-03-10 11:49:26,696 - sheffield_sales_forecast.api - INFO - Request for products for company: forge
+2025-03-10 11:49:27,069 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/products/forge completed in 0.373s with status 200
+2025-03-10 11:49:27,074 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/top-products/forge
+2025-03-10 11:49:27,079 - sheffield_sales_forecast.api - INFO - Request for top products for company: forge
+2025-03-10 11:49:27,286 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/top-products/forge completed in 0.212s with status 200
+2025-03-10 11:49:27,302 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/top-products/forge
+2025-03-10 11:49:27,311 - sheffield_sales_forecast.api - INFO - Request for top products for company: forge
+2025-03-10 11:49:27,464 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/top-products/forge completed in 0.161s with status 200
+2025-03-10 11:50:41,063 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/forecasts/revenue/forge
+2025-03-10 11:50:41,071 - sheffield_sales_forecast.api - INFO - Request for revenue forecast for company: forge
+2025-03-10 11:50:48,116 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/forecasts/revenue/forge completed in 7.053s with status 200
+2025-03-10 11:50:48,164 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/forecasts/insights/forge
+2025-03-10 11:50:48,164 - sheffield_sales_forecast.api - INFO - Request for forecast insights for company: forge
+2025-03-10 11:50:54,908 - sheffield_sales_forecast.api - ERROR - Error generating forecast insights: list index out of range
+2025-03-10 11:50:54,908 - sheffield_sales_forecast.api - ERROR - Traceback (most recent call last):
+  File "C:\Users\preet\Downloads\Liquid_SCM\Code\sheffield_sales_forcast\backend\app\api\routes\forecasts.py", line 148, in get_forecast_insights
+    "start": revenue_forecast["dates"][len(revenue_forecast["actuals"])],
+IndexError: list index out of range
+
+2025-03-10 11:50:54,912 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/forecasts/insights/forge completed in 6.748s with status 500
+2025-03-10 12:19:43,036 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/docs
+2025-03-10 12:19:43,096 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/docs completed in 0.062s with status 200
+2025-03-10 12:19:43,254 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/openapi.json
+2025-03-10 12:19:43,355 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/openapi.json completed in 0.101s with status 200
+2025-03-10 12:19:53,583 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/categories/forge
+2025-03-10 12:19:53,607 - sheffield_sales_forecast.api - INFO - Request for categories for company: forge
+2025-03-10 12:19:54,025 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/companies
+2025-03-10 12:19:54,033 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/categories/forge completed in 0.450s with status 200
+2025-03-10 12:19:54,033 - sheffield_sales_forecast.api - INFO - Request for list of companies
+2025-03-10 12:19:54,039 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/companies completed in 0.015s with status 200
+2025-03-10 12:19:54,089 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/categories/forge
+2025-03-10 12:19:54,097 - sheffield_sales_forecast.api - INFO - Request for categories for company: forge
+2025-03-10 12:19:54,225 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/categories/forge completed in 0.136s with status 200
+2025-03-10 12:19:54,233 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/companies
+2025-03-10 12:19:54,233 - sheffield_sales_forecast.api - INFO - Request for list of companies
+2025-03-10 12:19:54,241 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/companies completed in 0.008s with status 200
+2025-03-10 12:19:54,540 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/products/forge
+2025-03-10 12:19:54,547 - sheffield_sales_forecast.api - INFO - Request for products for company: forge
+2025-03-10 12:19:54,659 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/products/forge completed in 0.119s with status 200
+2025-03-10 12:19:54,692 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/products/forge
+2025-03-10 12:19:54,692 - sheffield_sales_forecast.api - INFO - Request for products for company: forge
+2025-03-10 12:19:54,821 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/products/forge completed in 0.129s with status 200
+2025-03-10 12:19:54,821 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/top-products/forge
+2025-03-10 12:19:54,829 - sheffield_sales_forecast.api - INFO - Request for top products for company: forge
+2025-03-10 12:19:54,981 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/top-products/forge completed in 0.160s with status 200
+2025-03-10 12:19:55,005 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/top-products/forge
+2025-03-10 12:19:55,005 - sheffield_sales_forecast.api - INFO - Request for top products for company: forge
+2025-03-10 12:19:55,109 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/top-products/forge completed in 0.104s with status 200
+2025-03-10 12:20:10,491 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/companies
+2025-03-10 12:20:10,495 - sheffield_sales_forecast.api - INFO - Request for list of companies
+2025-03-10 12:20:10,498 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/categories/forge
+2025-03-10 12:20:10,501 - sheffield_sales_forecast.api - INFO - Request for categories for company: forge
+2025-03-10 12:20:10,632 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/companies completed in 0.141s with status 200
+2025-03-10 12:20:10,637 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/categories/forge completed in 0.140s with status 200
+2025-03-10 12:20:10,684 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/companies
+2025-03-10 12:20:10,686 - sheffield_sales_forecast.api - INFO - Request for list of companies
+2025-03-10 12:20:10,689 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/categories/forge
+2025-03-10 12:20:10,691 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/companies completed in 0.008s with status 200
+2025-03-10 12:20:10,694 - sheffield_sales_forecast.api - INFO - Request for categories for company: forge
+2025-03-10 12:20:10,798 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/categories/forge completed in 0.109s with status 200
+2025-03-10 12:20:10,802 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/products/forge
+2025-03-10 12:20:10,804 - sheffield_sales_forecast.api - INFO - Request for products for company: forge
+2025-03-10 12:20:10,896 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/products/forge completed in 0.094s with status 200
+2025-03-10 12:20:10,911 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/products/forge
+2025-03-10 12:20:10,912 - sheffield_sales_forecast.api - INFO - Request for products for company: forge
+2025-03-10 12:20:10,996 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/products/forge completed in 0.085s with status 200
+2025-03-10 12:20:10,998 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/top-products/forge
+2025-03-10 12:20:11,001 - sheffield_sales_forecast.api - INFO - Request for top products for company: forge
+2025-03-10 12:20:11,103 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/top-products/forge completed in 0.105s with status 200
+2025-03-10 12:20:11,135 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/top-products/forge
+2025-03-10 12:20:11,136 - sheffield_sales_forecast.api - INFO - Request for top products for company: forge
+2025-03-10 12:20:11,220 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/top-products/forge completed in 0.085s with status 200
+2025-03-10 12:52:41,143 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/forecasts/revenue/Forge
+2025-03-10 12:52:41,693 - sheffield_sales_forecast.api - INFO - Request for revenue forecast for company: Forge
+2025-03-10 12:52:41,737 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/forecasts/revenue/Forge completed in 0.781s with status 404
+2025-03-10 12:52:54,143 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/forecasts/revenue/forge
+2025-03-10 12:52:54,146 - sheffield_sales_forecast.api - INFO - Request for revenue forecast for company: forge
+2025-03-10 12:52:54,228 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/forecasts/revenue/forge completed in 0.085s with status 200
+2025-03-10 12:53:23,051 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/companies
+2025-03-10 12:53:23,055 - sheffield_sales_forecast.api - INFO - Request for list of companies
+2025-03-10 12:53:23,061 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/companies completed in 0.011s with status 200
+2025-03-10 12:53:23,068 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/categories/forge
+2025-03-10 12:53:23,080 - sheffield_sales_forecast.api - INFO - Request for categories for company: forge
+2025-03-10 12:53:23,929 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/categories/forge completed in 0.861s with status 200
+2025-03-10 12:53:23,934 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/companies
+2025-03-10 12:53:23,937 - sheffield_sales_forecast.api - INFO - Request for list of companies
+2025-03-10 12:53:23,941 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/companies completed in 0.007s with status 200
+2025-03-10 12:53:23,961 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/categories/forge
+2025-03-10 12:53:23,964 - sheffield_sales_forecast.api - INFO - Request for categories for company: forge
+2025-03-10 12:53:24,093 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/categories/forge completed in 0.132s with status 200
+2025-03-10 12:53:24,096 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/products/forge
+2025-03-10 12:53:24,128 - sheffield_sales_forecast.api - INFO - Request for products for company: forge
+2025-03-10 12:53:24,311 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/products/forge completed in 0.215s with status 200
+2025-03-10 12:53:24,358 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/products/forge
+2025-03-10 12:53:24,362 - sheffield_sales_forecast.api - INFO - Request for products for company: forge
+2025-03-10 12:53:24,498 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/products/forge completed in 0.140s with status 200
+2025-03-10 12:53:24,502 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/top-products/forge
+2025-03-10 12:53:24,508 - sheffield_sales_forecast.api - INFO - Request for top products for company: forge
+2025-03-10 12:53:24,698 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/top-products/forge completed in 0.196s with status 200
+2025-03-10 12:53:24,717 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/top-products/forge
+2025-03-10 12:53:24,720 - sheffield_sales_forecast.api - INFO - Request for top products for company: forge
+2025-03-10 12:53:24,867 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/top-products/forge completed in 0.150s with status 200
+2025-03-10 15:10:13,187 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/companies
+2025-03-10 15:10:13,275 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/categories/forge
+2025-03-10 15:10:13,307 - sheffield_sales_forecast.api - INFO - Request for list of companies
+2025-03-10 15:10:13,348 - sheffield_sales_forecast.api - INFO - Request for categories for company: forge
+2025-03-10 15:10:14,610 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/companies completed in 1.431s with status 200
+2025-03-10 15:10:14,714 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/categories/forge completed in 1.439s with status 200
+2025-03-10 15:10:15,188 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/companies
+2025-03-10 15:10:15,190 - sheffield_sales_forecast.api - INFO - Request for list of companies
+2025-03-10 15:10:15,195 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/companies completed in 0.006s with status 200
+2025-03-10 15:10:15,198 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/categories/forge
+2025-03-10 15:10:15,205 - sheffield_sales_forecast.api - INFO - Request for categories for company: forge
+2025-03-10 15:10:15,371 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/categories/forge completed in 0.173s with status 200
+2025-03-10 15:10:15,383 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/products/forge
+2025-03-10 15:10:15,419 - sheffield_sales_forecast.api - INFO - Request for products for company: forge
+2025-03-10 15:10:15,752 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/products/forge completed in 0.369s with status 200
+2025-03-10 15:10:15,962 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/top-products/forge
+2025-03-10 15:10:15,970 - sheffield_sales_forecast.api - INFO - Request for top products for company: forge
+2025-03-10 15:10:16,249 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/top-products/forge completed in 0.286s with status 200
+2025-03-10 15:10:16,256 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/products/forge
+2025-03-10 15:10:16,261 - sheffield_sales_forecast.api - INFO - Request for products for company: forge
+2025-03-10 15:10:16,388 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/products/forge completed in 0.131s with status 200
+2025-03-10 15:10:16,463 - sheffield_sales_forecast.api - INFO - Request GET /api/v1/sales/top-products/forge
+2025-03-10 15:10:16,466 - sheffield_sales_forecast.api - INFO - Request for top products for company: forge
+2025-03-10 15:10:16,583 - sheffield_sales_forecast.api - INFO - Response GET /api/v1/sales/top-products/forge completed in 0.119s with status 200

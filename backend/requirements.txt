@@ -1,15 +1,27 @@
-fastapi>=0.104.0
+# FastAPI and Web Server
+fastapi>=0.104.1
 uvicorn>=0.23.2
-pandas>=2.0.0
-numpy>=1.24.0
-openpyxl>=3.1.2
-prophet>=1.1.4
-plotly>=5.18.0
-python-multipart>=0.0.6
-pyarrow>=14.0.1
-pytest>=7.4.0
-httpx>=0.24.1
-xlrd>=2.0.1
-python-dateutil>=2.8.2
-starlette>=0.27.0
 pydantic>=2.4.2
+pydantic-settings>=2.0.3
+python-multipart>=0.0.6
+python-dotenv>=1.0.0
+
+# Data Processing
+pandas>=2.1.1
+numpy>=1.26.0
+openpyxl>=3.1.2
+xlrd>=2.0.1
+
+# Forecasting
+prophet>=1.1.4
+matplotlib>=3.8.0
+seaborn>=0.13.0
+plotly>=5.17.0
+scipy>=1.11.2
+holidays>=0.35
+
+# API Integrations
+requests>=2.31.0
+
+# Utilities
+python-dateutil>=2.8.2

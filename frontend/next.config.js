@@ -1,17 +1,17 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    reactStrictMode: true,
-    env: {
-      NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api',
-    },
-    async rewrites() {
-      return [
-        {
-          source: '/api/:path*',
-          destination: 'http://localhost:8000/api/:path*',
-        },
-      ];
-    },
-  };
+  reactStrictMode: true,
+  swcMinify: true,
   
-  module.exports = nextConfig;
+  // API proxy configuration
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: 'http://localhost:8001/api/:path*', // FastAPI backend
+      },
+    ];
+  },
+}
+
+module.exports = nextConfig;
