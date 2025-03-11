@@ -271,11 +271,9 @@ const ProductsPage = () => {
                         {product}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
-                        <Link href={`/forecasts/product/${company}/${encodeURIComponent(product)}`}>
-                          <a className="text-blue-600 hover:text-blue-900 inline-flex items-center">
-                            View Forecast
-                            <ArrowRight className="ml-1 h-4 w-4" />
-                          </a>
+                        <Link href={`/forecasts/product/${company}/${encodeURIComponent(product)}`} className="text-blue-600 hover:text-blue-900 inline-flex items-center">
+                          View Forecast
+                          <ArrowRight className="ml-1 h-4 w-4" />
                         </Link>
                       </td>
                     </tr>

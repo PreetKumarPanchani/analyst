@@ -356,11 +356,9 @@ const ForecastInsights = ({ company }) => {
         </div>
         
         <div className="mt-6 text-center">
-          <Link href={`/forecasts/${company}`}>
-            <a className="inline-flex items-center text-blue-600 hover:text-blue-800">
-              View detailed forecasts
-              <ArrowRight className="w-4 h-4 ml-1" />
-            </a>
+          <Link href={`/forecasts/${company}`} className="inline-flex items-center text-blue-600 hover:text-blue-800">
+            View detailed forecasts
+            <ArrowRight className="w-4 h-4 ml-1" />
           </Link>
         </div>
       </div>

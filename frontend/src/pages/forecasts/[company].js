@@ -328,11 +328,9 @@ const ForecastsPage = () => {
             </ResponsiveContainer>
           </div>
           <div className="mt-4 flex justify-center">
-            <Link href={`/forecasts/revenue/${company}`}>
-              <a className="text-blue-600 hover:text-blue-800 flex items-center">
-                View detailed revenue forecast
-                <ArrowRight className="ml-1 w-4 h-4" />
-              </a>
+            <Link href={`/forecasts/revenue/${company}`} className="text-blue-600 hover:text-blue-800 flex items-center">
+              View detailed revenue forecast
+              <ArrowRight className="ml-1 w-4 h-4" />
             </Link>
           </div>
         </div>
@@ -403,11 +401,9 @@ const ForecastsPage = () => {
                   </ResponsiveContainer>
                 </div>
                 <div className="mt-4 flex justify-center">
-                  <Link href={`/forecasts/category/${company}/${encodeURIComponent(selectedCategory)}`}>
-                    <a className="text-blue-600 hover:text-blue-800 flex items-center">
-                      View detailed {selectedCategory} forecast
-                      <ArrowRight className="ml-1 w-4 h-4" />
-                    </a>
+                  <Link href={`/forecasts/category/${company}/${encodeURIComponent(selectedCategory)}`} className="text-blue-600 hover:text-blue-800 flex items-center">
+                    View detailed {selectedCategory} forecast
+                    <ArrowRight className="ml-1 w-4 h-4" />
                   </Link>
                 </div>
               </>
@@ -461,11 +457,9 @@ const ForecastsPage = () => {
                         {formatCurrency(product.total_revenue)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-right">
-                        <Link href={`/forecasts/product/${company}/${encodeURIComponent(product.product)}`}>
-                          <a className="text-blue-600 hover:text-blue-800 inline-flex items-center">
-                            View Forecast
-                            <ArrowRight className="ml-1 h-4 w-4" />
-                          </a>
+                        <Link href={`/forecasts/product/${company}/${encodeURIComponent(product.product)}`} className="text-blue-600 hover:text-blue-800 inline-flex items-center">
+                          View Forecast
+                          <ArrowRight className="ml-1 h-4 w-4" />
                         </Link>
                       </td>
                     </tr>
@@ -480,11 +474,9 @@ const ForecastsPage = () => {
           )}
           
           <div className="mt-6 flex justify-center">
-            <Link href={`/products/${company}`}>
-              <a className="text-blue-600 hover:text-blue-800 flex items-center">
-                View all products
-                <ArrowRight className="ml-1 w-4 h-4" />
-              </a>
+            <Link href={`/products/${company}`} className="text-blue-600 hover:text-blue-800 flex items-center">
+              View all products
+              <ArrowRight className="ml-1 w-4 h-4" />
             </Link>
           </div>
         </div>

@@ -126,10 +126,8 @@ const CategoryPage = () => {
             <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <h2 className="text-2xl font-medium text-gray-900">No Categories Found</h2>
             <p className="mt-2 text-gray-500">There are no product categories available for {company}.</p>
-            <Link href={`/dashboard/${company}`}>
-              <a className="mt-6 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">
+            <Link href={`/dashboard/${company}`} className="mt-6 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">
                 Return to Dashboard
-              </a>
             </Link>
           </div>
         </div>
@@ -195,10 +193,8 @@ const CategoryPage = () => {
                           </p>
                         </div>
                         <Link href={`/forecasts/category/${company}/${encodeURIComponent(selectedCategory)}`}>
-                          <a className="mt-6 flex items-center text-blue-600 hover:text-blue-800">
-                            View detailed forecast
-                            <ArrowRight className="w-4 h-4 ml-1" />
-                          </a>
+                          View detailed forecast
+                          <ArrowRight className="w-4 h-4 ml-1" />
                         </Link>
                       </>
                     )}
@@ -223,9 +219,7 @@ const CategoryPage = () => {
                       <ul className="divide-y divide-gray-200">
                         {products.slice(0, 5).map((product, index) => (
                           <li key={index} className="py-2">
-                            <Link href={`/forecasts/product/${company}/${encodeURIComponent(product)}`}>
-                              <a className="text-gray-900 hover:text-blue-600">{product}</a>
-                            </Link>
+                            <Link href={`/forecasts/product/${company}/${encodeURIComponent(product)}`} className="text-gray-900 hover:text-blue-600">{product}</Link>
                           </li>
                         ))}
                         {products.length > 5 && (
@@ -343,10 +337,8 @@ const CategoryPage = () => {
                         {category}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <Link href={`/forecasts/category/${company}/${encodeURIComponent(category)}`}>
-                          <a className="text-blue-600 hover:text-blue-900">
-                            View Forecast
-                          </a>
+                        <Link href={`/forecasts/category/${company}/${encodeURIComponent(category)}`} className="text-blue-600 hover:text-blue-900">
+                          View Forecast
                         </Link>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">

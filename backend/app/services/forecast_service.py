@@ -14,7 +14,9 @@ from app.core.logger import data_logger
 from app.services.events_service import EventsService
 from app.services.weather_service import WeatherService
 from app.data.processor import DataProcessor
+#from app.models.prophet_model_enhanced import ProphetModel
 from app.models.prophet_model import ProphetModel
+
 
 class ForecastService:
     """
@@ -213,16 +215,35 @@ class ForecastService:
             # Save prophet dataframe for reference and transparency
             self._save_prophet_data(company, "revenue", "revenue", prophet_df)
 
-            # Generate forecast
-            forecast = self.prophet_model.generate_forecast(
+            try:
+                # Generate forecast
+                forecast = self.prophet_model.generate_forecast(
                 model_id,
                 prophet_df,
                 periods,
                 include_weather,
                 include_events,
                 include_time_features,
-                force_retrain
+                force_retrain,
+                perform_cv=True,
+                cv_params=None,
+                tune_hyperparams=True,
+                param_grid=None
+
             )
+        
+
+            except:
+                forecast = self.prophet_model.generate_forecast(
+                    model_id,
+                    prophet_df,
+                    periods,
+                    include_weather,
+                    include_events,
+                    include_time_features,
+                    force_retrain,
+                )
+            
             
             # Add metadata
             forecast["metadata"] = {
@@ -234,6 +255,7 @@ class ForecastService:
                 "include_events": include_events,
                 "include_time_features": include_time_features,
                 "force_retrain": force_retrain,
+                
                 "data_range": {
                     "start": min_date,
                     "end": max_date
@@ -338,17 +360,34 @@ class ForecastService:
             # Save prophet dataframe for reference and transparency
             self._save_prophet_data(company, "category", category, prophet_df)
             
-            # Generate forecast
-            forecast = self.prophet_model.generate_forecast(
-                model_id,
+            try:
+                # Generate forecast
+                forecast = self.prophet_model.generate_forecast(
+                    model_id,
                 prophet_df,
                 periods,
                 include_weather,
                 include_events,
                 include_time_features,
-                force_retrain
+                force_retrain,
+                perform_cv=True,
+                cv_params=None,
+                tune_hyperparams=True,
+                param_grid=None,
+
             )
+            except:
+                forecast = self.prophet_model.generate_forecast(
+                    model_id,
+                    prophet_df,
+                    periods,
+                    include_weather,
+                    include_events,
+                    include_time_features,
+                    force_retrain,
+                )
             
+
             # Add metadata
             forecast["metadata"] = {
                 "company": company,
@@ -464,16 +503,33 @@ class ForecastService:
             # Save prophet dataframe for reference and transparency
             self._save_prophet_data(company, "product", product, prophet_df)
 
-            # Generate forecast
-            forecast = self.prophet_model.generate_forecast(
-                model_id,
-                prophet_df,
-                periods,
-                include_weather,
-                include_events,
-                include_time_features,
-                force_retrain
-            )
+            try:
+                # Generate forecast
+                forecast = self.prophet_model.generate_forecast(
+                    model_id,
+                    prophet_df,
+                    periods,
+                    include_weather,
+                    include_events,
+                    include_time_features,
+                    force_retrain,
+                    perform_cv=True,
+                    cv_params=None,
+                    tune_hyperparams=True,
+                    param_grid=None,
+
+                )
+            except:
+                forecast = self.prophet_model.generate_forecast(
+                    model_id,
+                    prophet_df,
+                    periods,
+                    include_weather,
+                    include_events,
+                    include_time_features,
+                    force_retrain,
+                )
+
             
             # Add metadata
             forecast["metadata"] = {
@@ -586,6 +642,7 @@ class ForecastService:
             data_logger.error(traceback.format_exc())
             return []
     
+
     def get_products(self, company: str, category: Optional[str] = None) -> List[str]:
         """
         Get list of available products
@@ -600,6 +657,8 @@ class ForecastService:
         try:
             # Load processed data
             processed_data = self.processor.load_processed_data(company)
+
+            print(processed_data)
             
             if not processed_data or "product_sales" not in processed_data:
                 data_logger.error(f"No product sales data available for company: {company}")
@@ -608,28 +667,48 @@ class ForecastService:
             product_sales = processed_data["product_sales"]
             
             # Filter by category if specified
-            if category and "category_sales" in processed_data:
-                # Get product-category mapping
-                category_sales = processed_data["category_sales"]
-                category_sales["category"] = category_sales["category"].astype(str)
+            if category:
+                # Try to load the product-category mapping file
+                mapping_path = os.path.join(self.processed_dir, company, "product_category_map.csv")
                 
-                # Filter products in this category
-                category_products = product_sales[product_sales["product"].isin(
-                    category_sales[category_sales["category"] == category]["product"]
-                )]
-                
-                products = category_products["product"].unique().tolist()
+                if os.path.exists(mapping_path):
+                    # Load the mapping and filter by category
+                    product_category_map = pd.read_csv(mapping_path)
+                    category_products = product_category_map[product_category_map["category"] == category]["product"].tolist()
+                    
+                    # Get products in this category that also exist in product_sales
+                    product_list = product_sales[product_sales["product"].isin(category_products)]["product"].unique().tolist()
+                else:
+                    # If mapping doesn't exist yet, create it on the fly
+                    data_logger.warning(f"Product-category mapping not found, creating on the fly")
+                    from app.data.loader import DataLoader
+                    
+                    loader = DataLoader()
+                    raw_data = loader.load_company_data(company)
+                    
+                    if raw_data and "sales_items" in raw_data:
+                        # Generate the mapping and save it for future use
+                        product_category_map = self.processor.generate_product_category_mapping(company, raw_data["sales_items"])
+                        if not product_category_map.empty:
+                            category_products = product_category_map[product_category_map["category"] == category]["product"].tolist()
+                            product_list = product_sales[product_sales["product"].isin(category_products)]["product"].unique().tolist()
+                        else:
+                            product_list = []
+                    else:
+                        data_logger.error(f"Could not load raw data to create product-category mapping")
+                        product_list = []
             else:
-                # Get all products
-                products = product_sales["product"].unique().tolist()
+                # Get all products if no category filter
+                product_list = product_sales["product"].unique().tolist()
             
-            data_logger.info(f"Retrieved {len(products)} products for company: {company}")
-            return products
+            data_logger.info(f"Retrieved {len(product_list)} products for company: {company}, category: {category if category else 'all'}")
+            return product_list
             
         except Exception as e:
             data_logger.error(f"Error getting products: {str(e)}")
             data_logger.error(traceback.format_exc())
             return []
+    
 
 def test_forecast_service():
     """Test the ForecastService functionality"""

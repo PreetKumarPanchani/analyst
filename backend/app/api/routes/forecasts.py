@@ -12,7 +12,7 @@ forecast_service = ForecastService()
 @router.get("/revenue/{company}", response_model=Dict[str, Any])
 async def forecast_revenue(
     company: str,
-    periods: int = Query(30, ge=1, le=365, description="Number of days to forecast"),
+    periods: int = Query(5, ge=1, le=365, description="Number of days to forecast"),
     include_weather: bool = Query(True, description="Include weather data"),
     include_events: bool = Query(True, description="Include events data"),
     force_retrain: bool = Query(False, description="Force model retraining")
@@ -47,7 +47,7 @@ async def forecast_revenue(
 async def forecast_category(
     company: str,
     category: str,
-    periods: int = Query(30, ge=1, le=365, description="Number of days to forecast"),
+    periods: int = Query(5, ge=1, le=365, description="Number of days to forecast"),
     include_weather: bool = Query(True, description="Include weather data"),
     include_events: bool = Query(True, description="Include events data"),
     force_retrain: bool = Query(False, description="Force model retraining")
@@ -83,7 +83,7 @@ async def forecast_category(
 async def forecast_product(
     company: str,
     product: str,
-    periods: int = Query(30, ge=1, le=365, description="Number of days to forecast"),
+    periods: int = Query(5, ge=1, le=365, description="Number of days to forecast"),
     include_weather: bool = Query(True, description="Include weather data"),
     include_events: bool = Query(True, description="Include events data"),
     force_retrain: bool = Query(False, description="Force model retraining")

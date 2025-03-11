@@ -338,7 +338,7 @@ class WeatherService:
             data_logger.error(traceback.format_exc())
             return None
         
-    
+    '''
     def get_historical_weather(self, start_date: str, end_date: str) -> List[Dict[str, Any]]:
         """
         Get historical weather data for Sheffield from Open-Meteo API, aggregated to daily summaries
@@ -399,7 +399,10 @@ class WeatherService:
             # Build daily historical data list
             historical_data = []
             for date, values in daily_data.items():
-                total_precip = sum(values["precipitations"])
+                                # Filter out None values before summing
+                precipitations = [p for p in values["precipitations"] if p is not None]
+                total_precip = sum(precipitations) if precipitations else 0
+                
                 weather_main = "Rain" if total_precip > 0 else "Clear"
                 daily_dict = {
                     "date": date,
@@ -409,6 +412,123 @@ class WeatherService:
                     "humidity": sum(values["humidities"]) / len(values["humidities"]),
                     "pressure": 1013,  # Default value since Open-Meteo doesn't provide pressure
                     "wind_speed": max(values["wind_speeds"]),  # Use max wind speed
+                    "precipitation": total_precip,
+                    "weather_main": weather_main,
+                    "is_rainy": total_precip > 0,
+                    "is_sunny": total_precip == 0,
+                    "is_snowy": False  # Simplified; could check temp < 0 and precip > 0
+                }
+                historical_data.append(daily_dict)
+
+            # Cache the result
+            self._set_cached_data(cache_key, historical_data)
+            data_logger.info(f"Retrieved {len(historical_data)} days of historical weather data from Open-Meteo")
+
+            return historical_data
+
+        except Exception as e:
+            data_logger.error(f"Error getting historical weather from Open-Meteo: {str(e)}")
+            data_logger.error(traceback.format_exc())
+            return []
+    '''
+
+        
+
+    def get_historical_weather(self, start_date: str, end_date: str) -> List[Dict[str, Any]]:
+        """
+        Get historical weather data for Sheffield from Open-Meteo API, aggregated to daily summaries
+        
+        Args:
+            start_date: Start date (YYYY-MM-DD)
+            end_date: End date (YYYY-MM-DD)
+            
+        Returns:
+            List of dictionaries with daily historical weather data
+        """
+        try:
+            # Check cache first
+            cache_key = f"historical_{start_date}_{end_date}"
+            is_valid, cached_data = self._get_cached_data(cache_key)
+            if is_valid:
+                data_logger.info(f"Using cached historical data for {start_date} to {end_date}")
+                return cached_data
+
+            # Check if end_date is today or in the future
+            end_date_obj = datetime.strptime(end_date, "%Y-%m-%d")
+            today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+            
+            # If end_date is today or future, adjust it to yesterday to avoid issues
+            if end_date_obj >= today:
+                end_date_obj = today - timedelta(days=1)
+                end_date = end_date_obj.strftime("%Y-%m-%d")
+                data_logger.info(f"Adjusted end date to yesterday: {end_date}")
+
+            # Construct Open-Meteo API URL for hourly data
+            url = (f"https://archive-api.open-meteo.com/v1/archive?"
+                f"latitude={self.lat}&longitude={self.lon}&"
+                f"start_date={start_date}&end_date={end_date}&"
+                f"hourly=temperature_2m,precipitation,relative_humidity_2m,wind_speed_10m")
+
+            # Make API request
+            response = requests.get(url)
+            if response.status_code != 200:
+                data_logger.error(f"Error from Open-Meteo API: {response.status_code} - {response.text}")
+                return []
+
+            data = response.json()
+            hourly_data = data.get("hourly", {})
+            
+            # Extract hourly data
+            times = hourly_data.get("time", [])
+            temps = hourly_data.get("temperature_2m", [])
+            precipitations = hourly_data.get("precipitation", [])
+            humidities = hourly_data.get("relative_humidity_2m", [])
+            wind_speeds = hourly_data.get("wind_speed_10m", [])
+
+            # Aggregate hourly data into daily summaries
+            daily_data = {}
+            for i, timestamp in enumerate(times):
+                if i >= len(temps) or i >= len(precipitations) or i >= len(humidities) or i >= len(wind_speeds):
+                    continue  # Skip if any data is missing for this timestamp
+                    
+                date = timestamp.split("T")[0]  # Extract date (YYYY-MM-DD)
+                if date not in daily_data:
+                    daily_data[date] = {
+                        "temps": [],
+                        "precipitations": [],
+                        "humidities": [],
+                        "wind_speeds": []
+                    }
+                    
+                # Only add non-None values
+                if temps[i] is not None:
+                    daily_data[date]["temps"].append(temps[i])
+                if precipitations[i] is not None:
+                    daily_data[date]["precipitations"].append(precipitations[i])
+                if humidities[i] is not None:
+                    daily_data[date]["humidities"].append(humidities[i])
+                if wind_speeds[i] is not None:
+                    daily_data[date]["wind_speeds"].append(wind_speeds[i])
+
+            # Build daily historical data list
+            historical_data = []
+            for date, values in daily_data.items():
+                # Skip days with no temperature data
+                if not values["temps"]:
+                    continue
+                    
+                total_precip = sum(values["precipitations"]) if values["precipitations"] else 0
+                weather_main = "Rain" if total_precip > 0 else "Clear"
+                
+                # Safe calculations with null checking
+                daily_dict = {
+                    "date": date,
+                    "min_temp": min(values["temps"]) if values["temps"] else 0,
+                    "max_temp": max(values["temps"]) if values["temps"] else 0,
+                    "avg_temp": sum(values["temps"]) / len(values["temps"]) if values["temps"] else 0,
+                    "humidity": sum(values["humidities"]) / len(values["humidities"]) if values["humidities"] else 50,
+                    "pressure": 1013,  # Default value since Open-Meteo doesn't provide pressure
+                    "wind_speed": max(values["wind_speeds"]) if values["wind_speeds"] else 0,
                     "precipitation": total_precip,
                     "weather_main": weather_main,
                     "is_rainy": total_precip > 0,

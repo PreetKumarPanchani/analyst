@@ -30,10 +30,11 @@ const ErrorDisplay = ({
         <h2 className="text-xl font-semibold text-center text-gray-900 mb-2">{title}</h2>
         <p className="text-sm text-center text-gray-600 mb-6">{message}</p>
         <div className="flex flex-col sm:flex-row sm:justify-center space-y-3 sm:space-y-0 sm:space-x-4">
-          <Link href={actionHref}>
-            <a className="inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">
-              {actionText}
-            </a>
+          <Link 
+            href={actionHref}
+            className="inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
+          >
+            {actionText}
           </Link>
           
           {onRetry && (

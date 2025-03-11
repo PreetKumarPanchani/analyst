@@ -6,14 +6,14 @@ import {
   TrendingUp, 
   Package, 
   ShoppingBag, 
-  Calendar, 
-  Cloud, 
   Menu, 
   X, 
   ChevronDown,
   Settings,
   Home,
-  LogOut
+  LogOut,
+  Calendar,
+  Cloud
 } from 'lucide-react';
 
 const AppLayout = ({ children }) => {
@@ -94,27 +94,25 @@ const AppLayout = ({ children }) => {
                 
                 {companyDropdownOpen && (
                   <div className="mt-1 bg-gray-700 rounded-md py-1">
-                    <Link href={`/dashboard/forge`}>
-                      <a 
-                        className={`block px-4 py-2 text-sm ${activeCompany === 'forge' ? 'bg-gray-600 text-white' : 'text-gray-300 hover:bg-gray-600'}`}
-                        onClick={() => {
-                          setCompanyDropdownOpen(false);
-                          setMobileMenuOpen(false);
-                        }}
-                      >
-                        Forge
-                      </a>
+                    <Link 
+                      href={`/dashboard/forge`}
+                      className={`block px-4 py-2 text-sm ${activeCompany === 'forge' ? 'bg-gray-600 text-white' : 'text-gray-300 hover:bg-gray-600'}`}
+                      onClick={() => {
+                        setCompanyDropdownOpen(false);
+                        setMobileMenuOpen(false);
+                      }}
+                    >
+                      Forge
                     </Link>
-                    <Link href={`/dashboard/cpl`}>
-                      <a 
-                        className={`block px-4 py-2 text-sm ${activeCompany === 'cpl' ? 'bg-gray-600 text-white' : 'text-gray-300 hover:bg-gray-600'}`}
-                        onClick={() => {
-                          setCompanyDropdownOpen(false);
-                          setMobileMenuOpen(false);
-                        }}
-                      >
-                        CPL
-                      </a>
+                    <Link 
+                      href={`/dashboard/cpl`}
+                      className={`block px-4 py-2 text-sm ${activeCompany === 'cpl' ? 'bg-gray-600 text-white' : 'text-gray-300 hover:bg-gray-600'}`}
+                      onClick={() => {
+                        setCompanyDropdownOpen(false);
+                        setMobileMenuOpen(false);
+                      }}
+                    >
+                      CPL
                     </Link>
                   </div>
                 )}
@@ -123,24 +121,24 @@ const AppLayout = ({ children }) => {
               {/* Navigation items */}
               <nav className="space-y-1">
                 {navigation.map((item) => (
-                  <Link key={item.name} href={item.href}>
-                    <a
+                  <Link 
+                    key={item.name} 
+                    href={item.href}
+                    className={`
+                      group flex items-center px-3 py-2 text-sm font-medium rounded-md
+                      ${isActive(item.href) 
+                        ? 'bg-gray-900 text-white' 
+                        : 'text-gray-300 hover:bg-gray-700 hover:text-white'}
+                    `}
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <item.icon 
                       className={`
-                        group flex items-center px-3 py-2 text-sm font-medium rounded-md
-                        ${isActive(item.href) 
-                          ? 'bg-gray-900 text-white' 
-                          : 'text-gray-300 hover:bg-gray-700 hover:text-white'}
-                      `}
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      <item.icon 
-                        className={`
-                          mr-3 h-5 w-5 
-                          ${isActive(item.href) ? 'text-blue-400' : 'text-gray-400 group-hover:text-gray-300'}
-                        `} 
-                      />
-                      {item.name}
-                    </a>
+                        mr-3 h-5 w-5 
+                        ${isActive(item.href) ? 'text-blue-400' : 'text-gray-400 group-hover:text-gray-300'}
+                      `} 
+                    />
+                    {item.name}
                   </Link>
                 ))}
               </nav>
@@ -149,11 +147,12 @@ const AppLayout = ({ children }) => {
             {/* Mobile menu footer */}
             <div className="mt-auto px-3 pb-3">
               <div className="pt-4 border-t border-gray-700">
-                <Link href="/settings">
-                  <a className="flex items-center px-3 py-2 text-sm font-medium text-gray-300 rounded-md hover:bg-gray-700 hover:text-white">
-                    <Settings className="mr-3 h-5 w-5 text-gray-400" />
-                    Settings
-                  </a>
+                <Link 
+                  href="/settings"
+                  className="flex items-center px-3 py-2 text-sm font-medium text-gray-300 rounded-md hover:bg-gray-700 hover:text-white"
+                >
+                  <Settings className="mr-3 h-5 w-5 text-gray-400" />
+                  Settings
                 </Link>
                 <button className="mt-1 flex items-center px-3 py-2 text-sm font-medium text-gray-300 rounded-md hover:bg-gray-700 hover:text-white w-full">
                   <LogOut className="mr-3 h-5 w-5 text-gray-400" />
@@ -189,21 +188,19 @@ const AppLayout = ({ children }) => {
               
               {companyDropdownOpen && (
                 <div className="mt-1 bg-gray-700 rounded-md py-1 absolute z-10 w-52">
-                  <Link href={`/dashboard/forge`}>
-                    <a 
-                      className={`block px-4 py-2 text-sm ${activeCompany === 'forge' ? 'bg-gray-600 text-white' : 'text-gray-300 hover:bg-gray-600'}`}
-                      onClick={() => setCompanyDropdownOpen(false)}
-                    >
-                      Forge
-                    </a>
+                  <Link 
+                    href={`/dashboard/forge`}
+                    className={`block px-4 py-2 text-sm ${activeCompany === 'forge' ? 'bg-gray-600 text-white' : 'text-gray-300 hover:bg-gray-600'}`}
+                    onClick={() => setCompanyDropdownOpen(false)}
+                  >
+                    Forge
                   </Link>
-                  <Link href={`/dashboard/cpl`}>
-                    <a 
-                      className={`block px-4 py-2 text-sm ${activeCompany === 'cpl' ? 'bg-gray-600 text-white' : 'text-gray-300 hover:bg-gray-600'}`}
-                      onClick={() => setCompanyDropdownOpen(false)}
-                    >
-                      CPL
-                    </a>
+                  <Link 
+                    href={`/dashboard/cpl`}
+                    className={`block px-4 py-2 text-sm ${activeCompany === 'cpl' ? 'bg-gray-600 text-white' : 'text-gray-300 hover:bg-gray-600'}`}
+                    onClick={() => setCompanyDropdownOpen(false)}
+                  >
+                    CPL
                   </Link>
                 </div>
               )}
@@ -212,23 +209,23 @@ const AppLayout = ({ children }) => {
             {/* Navigation */}
             <nav className="px-3 space-y-1">
               {navigation.map((item) => (
-                <Link key={item.name} href={item.href}>
-                  <a
+                <Link 
+                  key={item.name} 
+                  href={item.href}
+                  className={`
+                    group flex items-center px-3 py-2 text-sm font-medium rounded-md 
+                    ${isActive(item.href) 
+                      ? 'bg-gray-900 text-white' 
+                      : 'text-gray-300 hover:bg-gray-700 hover:text-white'}
+                  `}
+                >
+                  <item.icon 
                     className={`
-                      group flex items-center px-3 py-2 text-sm font-medium rounded-md 
-                      ${isActive(item.href) 
-                        ? 'bg-gray-900 text-white' 
-                        : 'text-gray-300 hover:bg-gray-700 hover:text-white'}
-                    `}
-                  >
-                    <item.icon 
-                      className={`
-                        mr-3 h-5 w-5 
-                        ${isActive(item.href) ? 'text-blue-400' : 'text-gray-400 group-hover:text-gray-300'}
-                      `} 
-                    />
-                    {item.name}
-                  </a>
+                      mr-3 h-5 w-5 
+                      ${isActive(item.href) ? 'text-blue-400' : 'text-gray-400 group-hover:text-gray-300'}
+                    `} 
+                  />
+                  {item.name}
                 </Link>
               ))}
             </nav>
@@ -236,11 +233,12 @@ const AppLayout = ({ children }) => {
           
           {/* Sidebar footer */}
           <div className="p-3 border-t border-gray-700">
-            <Link href="/settings">
-              <a className="flex items-center px-3 py-2 text-sm font-medium text-gray-300 rounded-md hover:bg-gray-700 hover:text-white">
-                <Settings className="mr-3 h-5 w-5 text-gray-400" />
-                Settings
-              </a>
+            <Link 
+              href="/settings"
+              className="flex items-center px-3 py-2 text-sm font-medium text-gray-300 rounded-md hover:bg-gray-700 hover:text-white"
+            >
+              <Settings className="mr-3 h-5 w-5 text-gray-400" />
+              Settings
             </Link>
             <button className="mt-1 flex items-center px-3 py-2 text-sm font-medium text-gray-300 rounded-md hover:bg-gray-700 hover:text-white w-full">
               <LogOut className="mr-3 h-5 w-5 text-gray-400" />

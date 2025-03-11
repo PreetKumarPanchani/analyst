@@ -52,6 +52,10 @@ class DataProcessor:
             # Process payment methods
             result["payment_methods"] = self._process_payment_methods(company, data["sales_payments"])
             
+
+            # To generate the product-category mapping
+            self.generate_product_category_mapping(company, data["sales_items"])
+            
             # Save processed data
             self._save_processed_data(company, result)
             
@@ -155,6 +159,42 @@ class DataProcessor:
             data_logger.error(traceback.format_exc())
             return pd.DataFrame()
     
+        
+    def generate_product_category_mapping(self, company: str, sales_items_df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Generate a mapping between products and their categories
+        
+        Args:
+            company: Company name
+            sales_items_df: Sales items DataFrame
+            
+        Returns:
+            DataFrame with product-category mapping
+        """
+        try:
+            # Get unique product-category pairs
+            product_category = sales_items_df[["Product Name", "Category"]].drop_duplicates()
+            
+            # Rename columns
+            product_category.columns = ["product", "category"]
+            
+            # Add company column
+            product_category["company"] = company
+            
+            # Save the mapping
+            mapping_dir = os.path.join(self.processed_dir, company)
+            os.makedirs(mapping_dir, exist_ok=True)
+            file_path = os.path.join(mapping_dir, "product_category_map.csv")
+            product_category.to_csv(file_path, index=False)
+            
+            data_logger.info(f"Generated product-category mapping for {company}: {len(product_category)} products")
+            return product_category
+            
+        except Exception as e:
+            data_logger.error(f"Error generating product-category mapping: {str(e)}")
+            data_logger.error(traceback.format_exc())
+            return pd.DataFrame()
+        
     def _process_product_sales(self, company: str, sales_items_df: pd.DataFrame) -> pd.DataFrame:
         """
         Process sales by product
@@ -283,6 +323,8 @@ class DataProcessor:
         try:
             result = {}
             company_dir = os.path.join(self.processed_dir, company)
+            #print( 'looking for company dir:::::::::::::::: ', company_dir)
+
             
             if not os.path.exists(company_dir):
                 data_logger.warning(f"No processed data directory for company: {company}")
@@ -292,7 +334,18 @@ class DataProcessor:
                 if file_name.endswith(".csv"):
                     key = file_name.split(".")[0]
                     file_path = os.path.join(company_dir, file_name)
-                    result[key] = pd.read_csv(file_path, parse_dates=["date"])
+                    
+                    # Check if this is a file with date columns or not
+                    # First, peek at the header to see if 'date' column exists
+                    header = pd.read_csv(file_path, nrows=0).columns.tolist()
+                    
+                    if 'date' in header:
+                        # If 'date' column exists, parse it
+                        result[key] = pd.read_csv(file_path, parse_dates=["date"])
+                    else:
+                        # Otherwise, just load the file without date parsing
+                        result[key] = pd.read_csv(file_path)
+                        
                     data_logger.info(f"Loaded processed data from: {file_path}")
             
             return result
