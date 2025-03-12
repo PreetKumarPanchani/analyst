@@ -35,8 +35,8 @@ const AppLayout = ({ children }) => {
     { name: 'Forecasts', href: `/forecasts/${activeCompany}`, icon: TrendingUp },
     { name: 'Products', href: `/products/${activeCompany}`, icon: Package },
     { name: 'Categories', href: `/categories/${activeCompany}`, icon: ShoppingBag },
-    { name: 'Events', href: '/events', icon: Calendar },
-    { name: 'Weather', href: '/weather', icon: Cloud },
+    // { name: 'Events', href: '/events', icon: Calendar },
+    // { name: 'Weather', href: '/weather', icon: Cloud },
   ];
   
   // Determine if a nav item is active
@@ -144,8 +144,8 @@ const AppLayout = ({ children }) => {
               </nav>
             </div>
             
-            {/* Mobile menu footer */}
-            <div className="mt-auto px-3 pb-3">
+            {/* Mobile menu footer, Comment the SETTINGS AND SIGN OUT, DO IT CORRECTLY */}
+            {/* <div className="mt-auto px-3 pb-3">
               <div className="pt-4 border-t border-gray-700">
                 <Link 
                   href="/settings"
@@ -159,7 +159,7 @@ const AppLayout = ({ children }) => {
                   Sign out
                 </button>
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>
@@ -232,7 +232,8 @@ const AppLayout = ({ children }) => {
           </div>
           
           {/* Sidebar footer */}
-          <div className="p-3 border-t border-gray-700">
+          {/* Comment the SETTINGS AND SIGN OUT, DO IT CORRECTLY */}
+          {/* <div className="p-3 border-t border-gray-700">
             <Link 
               href="/settings"
               className="flex items-center px-3 py-2 text-sm font-medium text-gray-300 rounded-md hover:bg-gray-700 hover:text-white"
@@ -243,8 +244,8 @@ const AppLayout = ({ children }) => {
             <button className="mt-1 flex items-center px-3 py-2 text-sm font-medium text-gray-300 rounded-md hover:bg-gray-700 hover:text-white w-full">
               <LogOut className="mr-3 h-5 w-5 text-gray-400" />
               Sign out
-            </button>
-          </div>
+            </button> 
+          </div> */}
         </div>
       </div>
 
@@ -262,14 +263,16 @@ const AppLayout = ({ children }) => {
           <div className="flex-1 px-4 flex justify-between">
             <div className="flex-1 flex items-center">
               <h1 className="text-xl font-semibold text-gray-900">
-                Sheffield Sales Forecast
+                Sales Forecast
               </h1>
             </div>
             <div className="ml-4 flex items-center md:ml-6">
               {/* User menu can go here */}
-              <div className="bg-gray-100 flex items-center px-3 py-1 rounded-md text-sm font-medium text-gray-700">
+
+              {/* <div className="bg-gray-100 flex items-center px-3 py-1 rounded-md text-sm font-medium text-gray-700">
                 <span>Admin User</span>
-              </div>
+              </div> */}
+
             </div>
           </div>
         </div>

@@ -39,7 +39,8 @@ const ForecastChart = ({
       }
       return value;
     },
-    tooltip: (value) => [value !== null ? value.toFixed(2) : '-', ''],
+    
+    tooltip: (value) => [value !== null ?  value.toFixed(2) : '-', ''],
     tooltipLabel: (label) => {
       if (typeof label === 'string' && label.includes('-')) {
         // Likely a date
@@ -130,8 +131,8 @@ const ForecastChart = ({
             name="Actual" 
             stroke={colors.actual} 
             strokeWidth={2} 
-            dot={{ r: 3 }}
-            activeDot={{ r: 6 }}
+            dot={(props) => <circle {...props} r={3} />}
+            activeDot={(props) => <circle {...props} r={6} />}
           />
         )}
         <Line 
@@ -148,9 +149,12 @@ const ForecastChart = ({
             }
             return "0";
           }}
+
           dot={(props) => {
             // Only show dots for forecast points if we have a mixed chart
-            if (!hasForecast) return { r: 3 };
+            if (!hasForecast) {
+              return <circle {...props} r={3} />;
+            }
             
             const index = props.index;
             if (forecastStartIndex !== -1 && index >= forecastStartIndex) {

@@ -412,7 +412,7 @@ const WeatherDashboard = () => {
                     label={{ value: 'Temperature (°C)', angle: -90, position: 'insideLeft' }}
                   />
                   <Tooltip
-                    formatter={(value) => [`${value.toFixed(1)}°C`, '']}
+                    formatter={(value) => [`${Number(value).toFixed(1)}°C`, '']}
                     labelFormatter={(label) => formatDate(label)}
                   />
                   <Legend />
@@ -422,7 +422,7 @@ const WeatherDashboard = () => {
                     dataKey="max" 
                     name="Max Temp" 
                     stroke="#f59e0b" 
-                    activeDot={{ r: 8 }}
+                    activeDot={(props) => <circle {...props} r={8} />}
                     strokeWidth={2}
                   />
                   <Line 
@@ -431,7 +431,7 @@ const WeatherDashboard = () => {
                     dataKey="avg" 
                     name="Avg Temp" 
                     stroke="#3b82f6" 
-                    dot={{ r: 0 }}
+                    dot={(props) => <circle {...props} r={0} />}
                     strokeWidth={2}
                   />
                   <Line 
@@ -440,7 +440,7 @@ const WeatherDashboard = () => {
                     dataKey="min" 
                     name="Min Temp" 
                     stroke="#2dd4bf" 
-                    activeDot={{ r: 8 }}
+                    activeDot={(props) => <circle {...props} r={8} />}
                     strokeWidth={2}
                   />
                 </LineChart>
@@ -466,7 +466,7 @@ const WeatherDashboard = () => {
                     label={{ value: 'Precipitation (mm)', angle: -90, position: 'insideLeft' }}
                   />
                   <Tooltip
-                    formatter={(value) => [`${value.toFixed(1)} mm`, '']}
+                    formatter={(value) => [`${Number(value).toFixed(1)} mm`, '']}
                     labelFormatter={(label) => formatDate(label)}
                   />
                   <Legend />

@@ -269,7 +269,7 @@ const ProductForecastView = ({ company = 'forge', initialProduct = null }) => {
                   />
                   <YAxis />
                   <Tooltip 
-                    formatter={(value) => [value ? value.toFixed(2) : 'N/A', '']}
+                    formatter={(value) => [typeof value === 'number' ? value.toFixed(2) : value, '']}
                     labelFormatter={(label) => new Date(label).toLocaleDateString()}
                   />
                   <Legend />
@@ -278,9 +278,9 @@ const ProductForecastView = ({ company = 'forge', initialProduct = null }) => {
                     dataKey="actual" 
                     stroke="#3b82f6" 
                     strokeWidth={2} 
-                    dot={{ r: 3 }}
+                    dot={(props) => <circle {...props} r={3} />}
+                    activeDot={(props) => <circle {...props} r={6} />}
                     name="Actual"
-                    activeDot={{ r: 6 }}
                   />
                   <Line 
                     type="monotone" 
@@ -293,15 +293,28 @@ const ProductForecastView = ({ company = 'forge', initialProduct = null }) => {
                       const index = chartData.indexOf(entry);
                       return index <= historicalEndIndex ? "0" : "5 5";
                     }}
-                    dot={function(entry) {
+                    /* dot={function(entry) {
                       const index = chartData.indexOf(entry.payload);
                       return index <= historicalEndIndex ? { r: 0 } : { r: 3 };
                     }}
+                    */
+
+                    // Render dots only for forecast period
+                    dot={(props) => {
+                      const index = chartData.indexOf(props.payload);
+                      if (index <= historicalEndIndex) {
+                        return null; // Don't render dots for historical fitted values
+                      } else {
+                        // Render dots only for forecast period
+                        return <circle {...props} r={3} />;
+                      }
+                    }}
+                    
                   />
                   <Line 
                     type="monotone" 
                     dataKey="upperBound" 
-                    stroke="#d1d5db" 
+                    stroke="#d1d5db"
                     strokeWidth={1}
                     name="Upper Bound"
                     dot={false}
@@ -338,7 +351,7 @@ const ProductForecastView = ({ company = 'forge', initialProduct = null }) => {
                     />
                     <YAxis />
                     <Tooltip 
-                      formatter={(value) => [value ? value.toFixed(2) : 'N/A', '']}
+                      formatter={(value) => [typeof value === 'number' ? value.toFixed(2) : value, '']}
                       labelFormatter={(label) => new Date(label).toLocaleDateString()}
                     />
                     <Legend />

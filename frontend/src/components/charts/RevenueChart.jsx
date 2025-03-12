@@ -82,8 +82,8 @@ const RevenueChart = ({
             name="Actual Revenue" 
             stroke="#3b82f6" 
             strokeWidth={2} 
-            dot={{ r: 3 }}
-            activeDot={{ r: 6 }}
+            dot={(props) => <circle {...props} r={3} />}
+            activeDot={(props) => <circle {...props} r={6} />}
           />
           <Line 
             type="monotone" 

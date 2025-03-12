@@ -305,9 +305,9 @@ const ForecastsPage = () => {
                   dataKey="actual" 
                   stroke="#3b82f6" 
                   strokeWidth={2} 
-                  dot={{ r: 3 }}
+                  dot={(props) => <circle {...props} r={3} />}
+                  activeDot={(props) => <circle {...props} r={6} />}
                   name="Actual Revenue"
-                  activeDot={{ r: 6 }}
                   isAnimationActive={false}
                 />
                 <Line 
@@ -316,8 +316,16 @@ const ForecastsPage = () => {
                   stroke="#10b981" 
                   strokeWidth={2}
                   name="Forecast" 
-                  dot={function(entry) {
-                    return entry && entry.payload && entry.payload.isForecasted ? { r: 3 } : { r: 0 };
+                  //dot={function(entry) {
+                  //  return entry && entry.payload && entry.payload.isForecasted ? { r: 3 } : { r: 0 };
+                  //}}
+          
+                  dot={(props) => {
+                    if (props && props.payload && props.payload.isForecasted) {
+                      return <circle {...props} r={3} />;
+                    } else {
+                      return null; // Hide dot completely for non-forecasted points
+                    }
                   }}
                   strokeDasharray={function(entry) {
                     return entry && entry.payload && entry.payload.isForecasted ? "5 5" : "0";

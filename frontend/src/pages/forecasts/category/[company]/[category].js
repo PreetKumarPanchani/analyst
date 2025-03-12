@@ -253,7 +253,7 @@ const CategoryForecastPage = () => {
                 />
                 <YAxis />
                 <Tooltip 
-                  formatter={(value) => [value ? value.toFixed(2) : 'N/A', '']}
+                  formatter={(value) => [value !== null ? Number(value).toFixed(2) : '-', '']}
                   labelFormatter={(label) => formatDate(new Date(label), { format: 'long' })}
                 />
                 <Legend />
@@ -262,9 +262,9 @@ const CategoryForecastPage = () => {
                   dataKey="actual" 
                   stroke="#3b82f6" 
                   strokeWidth={2} 
-                  dot={{ r: 3 }}
+                  dot={(props) => <circle {...props} r={3} />}
+                  activeDot={(props) => <circle {...props} r={6} />}
                   name="Actual"
-                  activeDot={{ r: 6 }}
                 />
                 <Line 
                   type="monotone" 
@@ -277,10 +277,17 @@ const CategoryForecastPage = () => {
                     const index = chartData.indexOf(entry);
                     return index <= historicalEndIndex ? "0" : "5 5";
                   }}
-                  dot={function(entry) {
-                    const index = chartData.indexOf(entry.payload);
-                    return index <= historicalEndIndex ? { r: 0 } : { r: 3 };
+                  dot={(props) => {
+                    // Check if we're in the historical or forecast period
+                    const index = chartData.indexOf(props.payload);
+                    if (index <= historicalEndIndex) {
+                      return null; // Don't render dots for historical fitted values
+                    } else {
+                      // Render dots only for forecast period
+                      return <circle {...props} r={3} fill="#10b981" />;
+                    }
                   }}
+
                 />
                 <Line 
                   type="monotone" 
@@ -322,7 +329,7 @@ const CategoryForecastPage = () => {
                   />
                   <YAxis />
                   <Tooltip 
-                    formatter={(value) => [value ? value.toFixed(2) : 'N/A', '']}
+                    formatter={(value) => [value !== null ? Number(value).toFixed(2) : '-', '']}
                     labelFormatter={(label) => formatDate(new Date(label), { format: 'long' })}
                   />
                   <Legend />

@@ -122,7 +122,7 @@ const SalesForecastDashboard = () => {
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-gray-800">Sheffield Sales Forecast</h1>
+            <h1 className="text-2xl font-bold text-gray-800">Sales Forecast</h1>
             <div className="flex space-x-2">
               <button 
                 onClick={() => handleCompanyChange('forge')}
@@ -210,7 +210,7 @@ const SalesForecastDashboard = () => {
                 />
                 <YAxis />
                 <Tooltip 
-                  formatter={(value) => [`£${value.toFixed(2)}`, '']}
+                  formatter={(value) => [`£${Number(value).toFixed(2)}`, '']}
                   labelFormatter={(label) => new Date(label).toLocaleDateString()}
                 />
                 <Legend />
@@ -219,9 +219,9 @@ const SalesForecastDashboard = () => {
                   dataKey="actual" 
                   stroke="#3b82f6" 
                   strokeWidth={2} 
-                  dot={{ r: 2 }}
+                  dot={(props) => <circle {...props} r={3} />}
+                  activeDot={(props) => <circle {...props} r={6} />}
                   name="Actual"
-                  activeDot={{ r: 6 }}
                 />
                 <Line 
                   type="monotone" 
@@ -230,7 +230,7 @@ const SalesForecastDashboard = () => {
                   strokeWidth={2}
                   name="Forecast" 
                   strokeDasharray="5 5"
-                  dot={{ r: 0 }}
+                  dot={(props) => <circle {...props} r={0} />}
                 />
                 <Line 
                   type="monotone" 

@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     
     # API settings
     API_V1_STR: str = "/api/v1"
-    PROJECT_NAME: str = "Sheffield Sales Forecast"
+    PROJECT_NAME: str = "Sales Forecast"
     
     # CORS settings
     BACKEND_CORS_ORIGINS: list[str] = ["http://localhost:3000", "https://localhost:8001", "http://localhost", "https://localhost"]
@@ -27,6 +27,9 @@ class Settings(BaseSettings):
     # Weather API settings
     WEATHER_API_KEY: str = os.getenv("WEATHER_API_KEY", "")
     WEATHER_API_URL: str = "https://api.openweathermap.org/data/2.5"
+    
+    # TimeGPT API settings
+    TIMEGPT_API_KEY: str = os.getenv("TIMEGPT_API_KEY", "")
     
     # Location settings
     LOCATION_COORDINATES: Dict[str, Dict[str, float]] = {

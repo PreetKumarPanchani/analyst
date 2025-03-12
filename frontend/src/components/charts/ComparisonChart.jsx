@@ -101,8 +101,10 @@ const ComparisonChart = ({
             name={item.name || item.dataKey}
             stroke={item.color}
             strokeWidth={2}
-            dot={{ r: 3 }}
-            activeDot={{ r: 6 }}
+            dot={(props) => <circle {...props} r={3} />}
+            activeDot={(props) => <circle {...props} r={6} />}
+            
+            
           />
         ))}
       </LineChart>

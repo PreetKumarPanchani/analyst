@@ -20,6 +20,8 @@ const ProductsPage = () => {
   const [sortBy, setSortBy] = useState('name');
   const [sortOrder, setSortOrder] = useState('asc');
 
+  // Commented out for now as we don't need it
+  /*
   useEffect(() => {
     if (!company) return;
 
@@ -77,6 +79,69 @@ const ProductsPage = () => {
     
     return true;
   });
+
+  */
+
+
+  // useEffect for fetching data
+  useEffect(() => {
+    if (!company) return;
+
+    if (!['forge', 'cpl'].includes(company)) {
+      router.replace('/dashboard/forge');
+      return;
+    }
+
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        
+        // Fetch categories first
+        const categoriesRes = await fetch(`/api/v1/sales/categories/${company}`);
+        if (!categoriesRes.ok) throw new Error(`Failed to fetch categories: ${categoriesRes.status}`);
+        
+        const categoriesData = await categoriesRes.json();
+        setCategories(categoriesData);
+        
+        // Fetch products with proper category filtering
+        const productsUrl = selectedCategory 
+          ? `/api/v1/sales/products/${company}?category=${encodeURIComponent(selectedCategory)}`
+          : `/api/v1/sales/products/${company}`;
+          
+        const productsRes = await fetch(productsUrl);
+        if (!productsRes.ok) throw new Error(`Failed to fetch products: ${productsRes.status}`);
+        
+        const productsData = await productsRes.json();
+        setProducts(productsData);
+        
+        // Fetch top products
+        const topProductsRes = await fetch(`/api/v1/sales/top-products/${company}?limit=10`);
+        if (!topProductsRes.ok) throw new Error(`Failed to fetch top products: ${topProductsRes.status}`);
+        
+        const topProductsData = await topProductsRes.json();
+        setTopProducts(topProductsData);
+        
+      } catch (err) {
+        console.error("Error fetching products data:", err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [company, selectedCategory, router]);
+
+  // Only apply search filter client-side
+  const filteredProducts = products.filter(product => {
+    // Apply search query filter
+    if (searchQuery && !product.toLowerCase().includes(searchQuery.toLowerCase())) {
+      return false;
+    }
+    
+    return true;
+  });
+
   
   // Sort products
   const sortedProducts = [...filteredProducts].sort((a, b) => {
