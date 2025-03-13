@@ -311,7 +311,8 @@ const CategoryForecastPage = () => {
           </div>
         </div>
         
-        {/* Components Chart */}
+        {/* Components Chart, comment it out for now */}
+        {/*
         {forecast && forecast.components && (
           <div className="bg-white p-6 rounded-lg shadow mb-8">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Forecast Components</h2>
@@ -381,6 +382,7 @@ const CategoryForecastPage = () => {
             </div>
           </div>
         )}
+        */}
         
         {/* Products in Category */}
         <div className="bg-white p-6 rounded-lg shadow">

@@ -197,13 +197,16 @@ const ProductForecastView = ({ company = 'forge', initialProduct = null }) => {
                   </>
                 )}
               </button>
-              <button
+              
+              {/* <button
                 className="flex items-center px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
               >
                 <DownloadCloud className="w-4 h-4 mr-2" />
                 Export
               </button>
+              */}
             </div>
+
           </div>
         </div>
 

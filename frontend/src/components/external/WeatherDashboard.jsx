@@ -480,6 +480,7 @@ const WeatherDashboard = () => {
             </div>
           </div>
           
+          {/*
           <div className="mt-6 bg-gray-50 p-4 rounded-md border border-gray-200">
             <h4 className="text-sm font-medium text-gray-900 mb-1">Weather Impact on Forecast Models</h4>
             <p className="text-sm text-gray-700">
@@ -488,6 +489,7 @@ const WeatherDashboard = () => {
               different product categories.
             </p>
           </div>
+          */}
         </div>
       )}
     </div>
