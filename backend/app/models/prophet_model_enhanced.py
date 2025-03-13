@@ -445,7 +445,7 @@ class ProphetModel:
                     data_logger.info(f"Cross-validation metrics for {model_id}:")
                     data_logger.info(f"RMSE: {cv_metrics['rmse'].mean():.4f}")
                     data_logger.info(f"MAPE: {cv_metrics['mape'].mean():.4f}%")
-                    data_logger.info(f"MAE: {cv_metrics['mae'].mean():.4f}")
+                    data_logger.info(f"mse: {cv_metrics['mae'].mean():.4f}")
                     
                     # Save CV results to file
                     cv_dir = os.path.join(self.model_dir, "cv_results")

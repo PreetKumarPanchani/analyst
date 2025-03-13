@@ -53,3 +53,14 @@ class Settings(BaseSettings):
 
 settings = Settings()
 settings.create_directories()
+
+
+
+
+
+
+
+
+
+
+
