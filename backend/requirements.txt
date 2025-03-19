@@ -11,6 +11,7 @@ pandas>=2.1.1
 numpy>=1.26.0
 openpyxl>=3.1.2
 xlrd>=2.0.1
+boto3>=1.28.0
 
 # Forecasting
 prophet>=1.1.4
@@ -19,6 +20,8 @@ seaborn>=0.13.0
 plotly>=5.17.0
 scipy>=1.11.2
 holidays>=0.35
+
+
 
 # API Integrations
 requests>=2.31.0

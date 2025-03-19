@@ -10,6 +10,8 @@ import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from app.core.logger import data_logger
+from app.core.config import settings
+from app.services.s3_service import S3Service
 
 class DataLoader:
     """
@@ -19,6 +21,8 @@ class DataLoader:
     def __init__(self, data_dir: str = "data/raw"):
         """Initialize the data loader"""
         self.data_dir = data_dir
+        self.s3_service = S3Service()
+        self.use_s3 = settings.USE_S3_STORAGE
         data_logger.info(f"DataLoader initialized with data directory: {data_dir}")
     
     def load_excel_file(self, file_path: str) -> pd.DataFrame:
@@ -32,14 +36,21 @@ class DataLoader:
             DataFrame with the Excel data
         """
         try:
-            full_path = os.path.join(self.data_dir, file_path)
-            data_logger.info(f"Loading Excel file: {full_path}")
-            
-            if not os.path.exists(full_path):
-                data_logger.error(f"File not found: {full_path}")
-                return pd.DataFrame()
-            
-            return pd.read_excel(full_path)
+            if self.use_s3:
+                # Use S3 path
+                s3_key = f"{settings.S3_RAW_PREFIX}{file_path}"
+                data_logger.info(f"Loading Excel file from S3: {s3_key}")
+                return self.s3_service.read_excel_file(s3_key)
+            else:
+                # Use local filesystem
+                full_path = os.path.join(self.data_dir, file_path)
+                data_logger.info(f"Loading Excel file from local filesystem: {full_path}")
+                
+                if not os.path.exists(full_path):
+                    data_logger.error(f"File not found: {full_path}")
+                    return pd.DataFrame()
+                
+                return pd.read_excel(full_path)
         except Exception as e:
             data_logger.error(f"Error loading Excel file {file_path}: {str(e)}")
             data_logger.error(traceback.format_exc())

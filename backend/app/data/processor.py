@@ -12,6 +12,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 
 
 from app.core.logger import data_logger
+from app.core.config import settings
+from app.services.s3_service import S3Service
 
 class DataProcessor:
     """
@@ -21,7 +23,12 @@ class DataProcessor:
     def __init__(self, processed_dir: str = "data/processed"):
         """Initialize the data processor"""
         self.processed_dir = processed_dir
-        os.makedirs(self.processed_dir, exist_ok=True)
+        self.s3_service = S3Service()
+        self.use_s3 = settings.USE_S3_STORAGE
+        
+        if not self.use_s3:
+            os.makedirs(self.processed_dir, exist_ok=True)
+            
         data_logger.info(f"DataProcessor initialized with output directory: {processed_dir}")
     
     def process_company_data(self, company: str, data: Dict[str, pd.DataFrame]) -> Dict[str, pd.DataFrame]:
@@ -182,10 +189,16 @@ class DataProcessor:
             product_category["company"] = company
             
             # Save the mapping
-            mapping_dir = os.path.join(self.processed_dir, company)
-            os.makedirs(mapping_dir, exist_ok=True)
-            file_path = os.path.join(mapping_dir, "product_category_map.csv")
-            product_category.to_csv(file_path, index=False)
+            if self.use_s3:
+                # Save to S3
+                s3_key = f"{settings.S3_PROCESSED_PREFIX}{company}/product_category_map.csv"
+                self.s3_service.write_csv_file(product_category, s3_key)
+            else:
+                # Save to local filesystem
+                mapping_dir = os.path.join(self.processed_dir, company)
+                os.makedirs(mapping_dir, exist_ok=True) 
+                file_path = os.path.join(mapping_dir, "product_category_map.csv")
+                product_category.to_csv(file_path, index=False)
             
             data_logger.info(f"Generated product-category mapping for {company}: {len(product_category)} products")
             return product_category
@@ -298,13 +311,21 @@ class DataProcessor:
             data: Dictionary of processed DataFrames
         """
         try:
-            company_dir = os.path.join(self.processed_dir, company)
-            os.makedirs(company_dir, exist_ok=True)
-            
-            for key, df in data.items():
-                file_path = os.path.join(company_dir, f"{key}.csv")
-                df.to_csv(file_path, index=False)
-                data_logger.info(f"Saved processed data to: {file_path}")
+            if self.use_s3:
+                # Save to S3
+                for key, df in data.items():
+                    s3_key = f"{settings.S3_PROCESSED_PREFIX}{company}/{key}.csv"
+                    self.s3_service.write_csv_file(df, s3_key)
+                    data_logger.info(f"Saved processed data to S3: {s3_key}")
+            else:
+                # Save to local filesystem
+                company_dir = os.path.join(self.processed_dir, company)
+                os.makedirs(company_dir, exist_ok=True)
+                
+                for key, df in data.items():
+                    file_path = os.path.join(company_dir, f"{key}.csv")
+                    df.to_csv(file_path, index=False)
+                    data_logger.info(f"Saved processed data to: {file_path}")
                 
         except Exception as e:
             data_logger.error(f"Error saving processed data: {str(e)}")
@@ -322,31 +343,54 @@ class DataProcessor:
         """
         try:
             result = {}
-            company_dir = os.path.join(self.processed_dir, company)
-            #print( 'looking for company dir:::::::::::::::: ', company_dir)
-
             
-            if not os.path.exists(company_dir):
-                data_logger.warning(f"No processed data directory for company: {company}")
-                return {}
-            
-            for file_name in os.listdir(company_dir):
-                if file_name.endswith(".csv"):
-                    key = file_name.split(".")[0]
-                    file_path = os.path.join(company_dir, file_name)
-                    
-                    # Check if this is a file with date columns or not
-                    # First, peek at the header to see if 'date' column exists
-                    header = pd.read_csv(file_path, nrows=0).columns.tolist()
-                    
-                    if 'date' in header:
-                        # If 'date' column exists, parse it
-                        result[key] = pd.read_csv(file_path, parse_dates=["date"])
-                    else:
-                        # Otherwise, just load the file without date parsing
-                        result[key] = pd.read_csv(file_path)
+            if self.use_s3:
+                # Load from S3
+                prefix = f"{settings.S3_PROCESSED_PREFIX}{company}/"
+                files = self.s3_service.list_objects(prefix)
+                
+                for s3_key in files:
+                    if s3_key.endswith(".csv"):
+                        key = os.path.basename(s3_key).split(".")[0]
                         
-                    data_logger.info(f"Loaded processed data from: {file_path}")
+                        # Special handling for product_category_map and other files without date column
+                        if key == "product_category_map":
+                            df = self.s3_service.read_csv_file(s3_key)
+                        else:
+                            # For files with date columns, attempt to parse dates safely
+                            try:
+                                df = self.s3_service.read_csv_file(s3_key, parse_dates=["date"])
+                            except Exception as e:
+                                data_logger.warning(f"Error parsing dates for {s3_key}: {str(e)}. Trying without date parsing.")
+                                df = self.s3_service.read_csv_file(s3_key)
+                                
+                        result[key] = df
+                        data_logger.info(f"Loaded processed data from S3: {s3_key}")
+            else:
+                # Load from local filesystem
+                company_dir = os.path.join(self.processed_dir, company)
+                
+                if not os.path.exists(company_dir):
+                    data_logger.warning(f"No processed data directory for company: {company}")
+                    return {}
+                
+                for file_name in os.listdir(company_dir):
+                    if file_name.endswith(".csv"):
+                        key = file_name.split(".")[0]
+                        file_path = os.path.join(company_dir, file_name)
+                        
+                        # Check if this is a file with date columns or not
+                        # First, peek at the header to see if 'date' column exists
+                        header = pd.read_csv(file_path, nrows=0).columns.tolist()
+                        
+                        if 'date' in header:
+                            # If 'date' column exists, parse it
+                            result[key] = pd.read_csv(file_path, parse_dates=["date"])
+                        else:
+                            # Otherwise, just load the file without date parsing
+                            result[key] = pd.read_csv(file_path)
+                            
+                        data_logger.info(f"Loaded processed data from: {file_path}")
             
             return result
             

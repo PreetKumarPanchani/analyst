@@ -6,6 +6,7 @@ import os
 import json
 import traceback
 from typing import Dict, List, Optional, Any, Tuple
+
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
@@ -16,20 +17,21 @@ from app.core.config import settings
 class WeatherService:
     """
     Service for retrieving weather data and forecasts for Sheffield, UK
-    Uses the OpenWeatherMap API for current and forecast data
+    Uses the Open-Meteo API for current, forecast, and historical weather data
     """
     
-    def __init__(self, api_key: str = None, cache_dir: str = None):
+    def __init__(self, cache_dir: str = 'data/cache'):
         """Initialize the weather service"""
-        self.api_key = api_key or settings.WEATHER_API_KEY
-        self.api_base_url = settings.WEATHER_API_URL
+        # Base URLs for Open-Meteo APIs
+        self.forecast_api_url = "https://api.open-meteo.com/v1/forecast"
+        self.historical_api_url = "https://archive-api.open-meteo.com/v1/archive"
         
         # Sheffield coordinates
         self.lat = settings.LOCATION_COORDINATES["sheffield"]["lat"]
         self.lon = settings.LOCATION_COORDINATES["sheffield"]["lon"]
         
         # Cache settings
-        self.cache_dir = cache_dir or os.path.join(settings.PROCESSED_DATA_DIR, "cache")
+        self.cache_dir = cache_dir 
         os.makedirs(self.cache_dir, exist_ok=True)
         self.cache_file = os.path.join(self.cache_dir, "weather_cache.json")
         self.cache_expiry = settings.CACHE_EXPIRY  # seconds
@@ -110,7 +112,7 @@ class WeatherService:
     
     def get_current_weather(self) -> Dict[str, Any]:
         """
-        Get current weather data for Sheffield
+        Get current weather data for Sheffield using Open-Meteo
         
         Returns:
             Dictionary with weather data
@@ -123,40 +125,60 @@ class WeatherService:
             if is_valid:
                 return cached_data
             
-            # Exit early if no API key
-            if not self.api_key:
-                data_logger.warning("No OpenWeatherMap API key provided")
-                return None
-            # Make API request
-            url = f"{self.api_base_url}/weather"
+            # Make API request to Open-Meteo
             params = {
-                "lat": self.lat,
-                "lon": self.lon,
-                "appid": self.api_key,
-                "units": "metric"  # Use metric units
+                "latitude": self.lat,
+                "longitude": self.lon,
+                "current": [
+                    "temperature_2m", 
+                    "relative_humidity_2m",
+                    "apparent_temperature",
+                    "is_day",
+                    "precipitation",
+                    "rain",
+                    "showers",
+                    "snowfall",
+                    "weather_code",
+                    "cloud_cover",
+                    "pressure_msl",
+                    "surface_pressure",
+                    "wind_speed_10m",
+                    "wind_direction_10m",
+                    "wind_gusts_10m"
+                ]
             }
             
-            response = requests.get(url, params=params)
+            response = requests.get(self.forecast_api_url, params=params)
             
             if response.status_code != 200:
-                data_logger.error(f"Error from OpenWeatherMap API: {response.status_code} - {response.text}")
+                data_logger.error(f"Error from Open-Meteo API: {response.status_code} - {response.text}")
                 return None
             
             data = response.json()
+            current_data = data.get("current", {})
+            
+            # Map weather code to weather description
+            weather_code = current_data.get("weather_code")
+            weather_main, weather_description = self._get_weather_description(weather_code)
             
             # Simplify the response
             weather_data = {
                 "timestamp": datetime.now().isoformat(),
-                "temperature": data["main"]["temp"],
-                "feels_like": data["main"]["feels_like"],
-                "humidity": data["main"]["humidity"],
-                "pressure": data["main"]["pressure"],
-                "weather_main": data["weather"][0]["main"],
-                "weather_description": data["weather"][0]["description"],
-                "wind_speed": data["wind"]["speed"],
-                "clouds": data["clouds"]["all"],
-                "rain_1h": data.get("rain", {}).get("1h", 0),
-                "snow_1h": data.get("snow", {}).get("1h", 0)
+                "temperature": current_data.get("temperature_2m"),
+                "feels_like": current_data.get("apparent_temperature"),
+                "humidity": current_data.get("relative_humidity_2m"),
+                "pressure": current_data.get("surface_pressure"),
+                "weather_main": weather_main,
+                "weather_description": weather_description,
+                "weather_code": weather_code,
+                "wind_speed": current_data.get("wind_speed_10m"),
+                "wind_direction": current_data.get("wind_direction_10m"),
+                "wind_gusts": current_data.get("wind_gusts_10m"),
+                "clouds": current_data.get("cloud_cover"),
+                "is_day": current_data.get("is_day"),
+                "precipitation": current_data.get("precipitation"),
+                "rain": current_data.get("rain"),
+                "snowfall": current_data.get("snowfall")
             }
             
             # Cache the result
@@ -170,14 +192,59 @@ class WeatherService:
             data_logger.error(f"Error getting current weather: {str(e)}")
             data_logger.error(traceback.format_exc())
             return None
+    
+    def _get_weather_description(self, code: int) -> Tuple[str, str]:
+        """
+        Convert WMO weather code to description
+        
+        Args:
+            code: WMO weather code
+            
+        Returns:
+            Tuple of (main category, description)
+        """
+        # WMO Weather interpretation codes (WW)
+        weather_codes = {
+            0: ("Clear", "Clear sky"),
+            1: ("Mainly Clear", "Mainly clear"),
+            2: ("Partly Cloudy", "Partly cloudy"),
+            3: ("Overcast", "Overcast"),
+            45: ("Fog", "Fog"),
+            48: ("Fog", "Depositing rime fog"),
+            51: ("Drizzle", "Light drizzle"),
+            53: ("Drizzle", "Moderate drizzle"),
+            55: ("Drizzle", "Dense drizzle"),
+            56: ("Freezing Drizzle", "Light freezing drizzle"),
+            57: ("Freezing Drizzle", "Dense freezing drizzle"),
+            61: ("Rain", "Slight rain"),
+            63: ("Rain", "Moderate rain"),
+            65: ("Rain", "Heavy rain"),
+            66: ("Freezing Rain", "Light freezing rain"),
+            67: ("Freezing Rain", "Heavy freezing rain"),
+            71: ("Snow", "Slight snow fall"),
+            73: ("Snow", "Moderate snow fall"),
+            75: ("Snow", "Heavy snow fall"),
+            77: ("Snow", "Snow grains"),
+            80: ("Rain Showers", "Slight rain showers"),
+            81: ("Rain Showers", "Moderate rain showers"),
+            82: ("Rain Showers", "Violent rain showers"),
+            85: ("Snow Showers", "Slight snow showers"),
+            86: ("Snow Showers", "Heavy snow showers"),
+            95: ("Thunderstorm", "Thunderstorm"),
+            96: ("Thunderstorm", "Thunderstorm with slight hail"),
+            99: ("Thunderstorm", "Thunderstorm with heavy hail")
+        }
+        
+        if code in weather_codes:
+            return weather_codes[code]
+        return ("Unknown", "Unknown weather condition")
         
     def get_forecast(self, days: int = 7) -> List[Dict[str, Any]]:
         """
-        Get weather forecast for Sheffield
-        Tries to use daily forecast API first, falls back to 3-hourly if unavailable
+        Get weather forecast for Sheffield using Open-Meteo
         
         Args:
-            days: Number of days to forecast (max 16 for paid API, max 5-7 for free API)
+            days: Number of days to forecast (max 16)
             
         Returns:
             List of dictionaries with daily forecast data
@@ -190,253 +257,95 @@ class WeatherService:
             if is_valid:
                 return cached_data
             
-            # Exit early if no API key
-            if not self.api_key:
-                data_logger.warning("No OpenWeatherMap API key provided")
-                return None
-            
-            # First try the daily forecast endpoint (requires paid subscription)
-            url = f"{self.api_base_url}/forecast/daily"
+            # Make API request to Open-Meteo
             params = {
-                "lat": self.lat,
-                "lon": self.lon,
-                "cnt": min(days, 16),
-                "appid": self.api_key,
-                "units": "metric"
+                "latitude": self.lat,
+                "longitude": self.lon,
+                "forecast_days": min(days, 16),  # Maximum 16 days
+                "daily": [
+                    "weather_code", 
+                    "temperature_2m_max", 
+                    "temperature_2m_min",
+                    "apparent_temperature_max",
+                    "apparent_temperature_min",
+                    "precipitation_sum",
+                    "rain_sum",
+                    "showers_sum",
+                    "snowfall_sum",
+                    "precipitation_hours",
+                    "precipitation_probability_max",
+                    "wind_speed_10m_max",
+                    "wind_gusts_10m_max",
+                    "wind_direction_10m_dominant",
+                    "shortwave_radiation_sum"
+                ],
+                "timezone": "GMT"  # Use GMT timezone for consistency
             }
             
-            response = requests.get(url, params=params)
-            
-            # If successful, process the daily forecast data
-            if response.status_code == 200:
-                data = response.json()
-                
-                # Process daily forecast data
-                forecasts = []
-                
-                for item in data["list"]:
-                    dt = datetime.fromtimestamp(item["dt"])
-                    date_str = dt.strftime("%Y-%m-%d")
-                    
-                    daily_forecast = {
-                        "date": date_str,
-                        "min_temp": item["temp"]["min"],
-                        "max_temp": item["temp"]["max"],
-                        "avg_temp": (item["temp"]["day"] + item["temp"]["night"]) / 2,
-                        "humidity": item["humidity"],
-                        "pressure": item["pressure"],
-                        "wind_speed": item["speed"],
-                        "precipitation": item.get("rain", 0) + item.get("snow", 0),
-                        "weather_main": item["weather"][0]["main"],
-                        "is_rainy": item["weather"][0]["main"] in ["Rain", "Drizzle", "Thunderstorm"],
-                        "is_sunny": item["weather"][0]["main"] in ["Clear", "Sunny"],
-                        "is_snowy": item["weather"][0]["main"] == "Snow",
-                        "pop": item.get("pop", 0),  # Probability of precipitation
-                    }
-                    
-                    forecasts.append(daily_forecast)
-                    
-                # Cache and return the results
-                self._set_cached_data(cache_key, forecasts)
-                data_logger.info(f"Retrieved {len(forecasts)} days of forecast data from daily API")
-                return forecasts
-            
-            # If daily forecast API not available, fall back to 3-hourly API
-            data_logger.info("Daily forecast API not available, falling back to 3-hourly forecast")
-            
-            # Make API request to 3-hourly forecast endpoint (free tier)
-            url = f"{self.api_base_url}/forecast"
-            params = {
-                "lat": self.lat,
-                "lon": self.lon,
-                "appid": self.api_key,
-                "units": "metric"
-            }
-            
-            response = requests.get(url, params=params)
+            response = requests.get(self.forecast_api_url, params=params)
             
             if response.status_code != 200:
-                data_logger.error(f"Error from OpenWeatherMap API: {response.status_code} - {response.text}")
-                return None
+                data_logger.error(f"Error from Open-Meteo API: {response.status_code} - {response.text}")
+                return []
             
             data = response.json()
+            daily_data = data.get("daily", {})
+            daily_time = daily_data.get("time", [])
             
-            # Process 3-hourly forecasts to daily (with improvements)
+            # Process the forecast data
             forecasts = []
-            forecast_by_day = {}
             
-            for item in data["list"]:
-                # Convert timestamp to date
-                dt = datetime.fromtimestamp(item["dt"])
-                date_str = dt.strftime("%Y-%m-%d")
-                
-                # Group by day
-                if date_str not in forecast_by_day:
-                    forecast_by_day[date_str] = []
-                
-                forecast_by_day[date_str].append({
-                    "datetime": dt.isoformat(),
-                    "temperature": item["main"]["temp"],
-                    "feels_like": item["main"]["feels_like"],
-                    "humidity": item["main"]["humidity"],
-                    "pressure": item["main"]["pressure"],
-                    "weather_main": item["weather"][0]["main"],
-                    "weather_description": item["weather"][0]["description"],
-                    "wind_speed": item["wind"]["speed"],
-                    "wind_gust": item["wind"].get("gust", 0),
-                    "clouds": item["clouds"]["all"],
-                    "rain_3h": item.get("rain", {}).get("3h", 0),
-                    "snow_3h": item.get("snow", {}).get("3h", 0),
-                    "pop": item.get("pop", 0),  # Probability of precipitation
-                    "hour": dt.hour
-                })
-            
-            # Aggregate to daily forecasts (improved aggregation)
-            for date_str, items in forecast_by_day.items():
-                temps = [item["temperature"] for item in items]
-                
-                # More efficient way to find most common weather
-                weather_counts = {}
-                for item in items:
-                    w_main = item["weather_main"]
-                    weather_counts[w_main] = weather_counts.get(w_main, 0) + 1
+            for i in range(len(daily_time)):
+                date_str = daily_time[i]
+                weather_code = daily_data.get("weather_code", [])[i] if "weather_code" in daily_data else None
+                weather_main, _ = self._get_weather_description(weather_code) if weather_code is not None else ("Unknown", "Unknown")
                 
                 daily_forecast = {
                     "date": date_str,
-                    "min_temp": min(temps),
-                    "max_temp": max(temps),
-                    "avg_temp": sum(temps) / len(temps),
-                    "morning_temp": next((item["temperature"] for item in items if 7 <= item["hour"] <= 10), None),
-                    "evening_temp": next((item["temperature"] for item in items if 17 <= item["hour"] <= 20), None),
-                    "humidity": sum(item["humidity"] for item in items) / len(items),
-                    "pressure": sum(item["pressure"] for item in items) / len(items),
-                    "wind_speed": max(item["wind_speed"] for item in items),  # Use max wind speed
-                    "wind_gust": max((item.get("wind_gust", 0) for item in items), default=0),
-                    "precipitation": sum(item.get("rain_3h", 0) + item.get("snow_3h", 0) for item in items),
-                    "pop": max(item.get("pop", 0) for item in items),  # Max probability of precipitation
-                    "weather_main": max(weather_counts.items(), key=lambda x: x[1])[0],
-                    "is_rainy": any(item["weather_main"] in ["Rain", "Drizzle", "Thunderstorm"] for item in items),
-                    "is_sunny": any(item["weather_main"] in ["Clear", "Sunny"] and 7 <= item["hour"] <= 19 for item in items),
-                    "is_snowy": any(item["weather_main"] == "Snow" for item in items),
+                    "min_temp": daily_data.get("temperature_2m_min", [])[i] if "temperature_2m_min" in daily_data else None,
+                    "max_temp": daily_data.get("temperature_2m_max", [])[i] if "temperature_2m_max" in daily_data else None,
+                    "avg_temp": (daily_data.get("temperature_2m_min", [])[i] + daily_data.get("temperature_2m_max", [])[i]) / 2 if "temperature_2m_min" in daily_data and "temperature_2m_max" in daily_data else None,
+                    "min_feels_like": daily_data.get("apparent_temperature_min", [])[i] if "apparent_temperature_min" in daily_data else None,
+                    "max_feels_like": daily_data.get("apparent_temperature_max", [])[i] if "apparent_temperature_max" in daily_data else None,
+                    "precipitation": daily_data.get("precipitation_sum", [])[i] if "precipitation_sum" in daily_data else None,
+                    "rain": daily_data.get("rain_sum", [])[i] if "rain_sum" in daily_data else None,
+                    "showers": daily_data.get("showers_sum", [])[i] if "showers_sum" in daily_data else None,
+                    "snowfall": daily_data.get("snowfall_sum", [])[i] if "snowfall_sum" in daily_data else None,
+                    "precipitation_hours": daily_data.get("precipitation_hours", [])[i] if "precipitation_hours" in daily_data else None,
+                    "precipitation_probability": daily_data.get("precipitation_probability_max", [])[i] if "precipitation_probability_max" in daily_data else None,
+                    "wind_speed": daily_data.get("wind_speed_10m_max", [])[i] if "wind_speed_10m_max" in daily_data else None,
+                    "wind_gusts": daily_data.get("wind_gusts_10m_max", [])[i] if "wind_gusts_10m_max" in daily_data else None,
+                    "wind_direction": daily_data.get("wind_direction_10m_dominant", [])[i] if "wind_direction_10m_dominant" in daily_data else None,
+                    "radiation": daily_data.get("shortwave_radiation_sum", [])[i] if "shortwave_radiation_sum" in daily_data else None,
+                    "weather_code": weather_code,
+                    "weather_main": weather_main,
+                    "is_rainy": weather_main in ["Rain", "Rain Showers", "Drizzle", "Freezing Rain", "Freezing Drizzle", "Thunderstorm"],
+                    "is_snowy": weather_main in ["Snow", "Snow Showers"],
+                    "is_sunny": weather_main in ["Clear", "Mainly Clear", "Partly Cloudy"],
+                    "is_cloudy": weather_main in ["Partly Cloudy", "Overcast"]
                 }
+                
+                # If 'apparent_temperature' is not available, use then compute feels_like from  min_feels_like and max_feels_like else from  apparent_temperature
+                if "apparent_temperature" not in daily_data:
+                    daily_forecast["feels_like"] = (daily_forecast["min_feels_like"] + daily_forecast["max_feels_like"]) / 2
+                else:
+                    daily_forecast["feels_like"] = daily_data.get("apparent_temperature", [])[i]
                 
                 forecasts.append(daily_forecast)
             
-            # Sort by date and limit to requested days
-            forecasts.sort(key=lambda x: x["date"])
-            forecasts = forecasts[:days]
-            
-            # Cache the result
+            # Cache and return the results
             self._set_cached_data(cache_key, forecasts)
-            
-            data_logger.info(f"Retrieved {len(forecasts)} days of forecast data from 3-hourly API")
-            
+            data_logger.info(f"Retrieved {len(forecasts)} days of forecast data")
             return forecasts
             
         except Exception as e:
             data_logger.error(f"Error getting forecast: {str(e)}")
             data_logger.error(traceback.format_exc())
-            return None
-        
-    '''
-    def get_historical_weather(self, start_date: str, end_date: str) -> List[Dict[str, Any]]:
-        """
-        Get historical weather data for Sheffield from Open-Meteo API, aggregated to daily summaries
-        
-        Args:
-            start_date: Start date (YYYY-MM-DD)
-            end_date: End date (YYYY-MM-DD)
-            
-        Returns:
-            List of dictionaries with daily historical weather data
-        """
-        try:
-            # Check cache first
-            cache_key = f"historical_{start_date}_{end_date}"
-            is_valid, cached_data = self._get_cached_data(cache_key)
-            if is_valid:
-                data_logger.info(f"Using cached historical data for {start_date} to {end_date}")
-                return cached_data
-
-            # Construct Open-Meteo API URL for hourly data
-            url = (f"https://archive-api.open-meteo.com/v1/archive?"
-                f"latitude={self.lat}&longitude={self.lon}&"
-                f"start_date={start_date}&end_date={end_date}&"
-                f"hourly=temperature_2m,precipitation,relative_humidity_2m,wind_speed_10m")
-
-            # Make API request
-            response = requests.get(url)
-            if response.status_code != 200:
-                data_logger.error(f"Error from Open-Meteo API: {response.status_code} - {response.text}")
-                return []
-
-            data = response.json()
-            hourly_data = data.get("hourly", {})
-            
-            # Extract hourly data
-            times = hourly_data.get("time", [])
-            temps = hourly_data.get("temperature_2m", [])
-            precipitations = hourly_data.get("precipitation", [])
-            humidities = hourly_data.get("relative_humidity_2m", [])
-            wind_speeds = hourly_data.get("wind_speed_10m", [])
-
-            # Aggregate hourly data into daily summaries
-            daily_data = {}
-            for i, timestamp in enumerate(times):
-                date = timestamp.split("T")[0]  # Extract date (YYYY-MM-DD)
-                if date not in daily_data:
-                    daily_data[date] = {
-                        "temps": [],
-                        "precipitations": [],
-                        "humidities": [],
-                        "wind_speeds": []
-                    }
-                daily_data[date]["temps"].append(temps[i])
-                daily_data[date]["precipitations"].append(precipitations[i])
-                daily_data[date]["humidities"].append(humidities[i])
-                daily_data[date]["wind_speeds"].append(wind_speeds[i])
-
-            # Build daily historical data list
-            historical_data = []
-            for date, values in daily_data.items():
-                                # Filter out None values before summing
-                precipitations = [p for p in values["precipitations"] if p is not None]
-                total_precip = sum(precipitations) if precipitations else 0
-                
-                weather_main = "Rain" if total_precip > 0 else "Clear"
-                daily_dict = {
-                    "date": date,
-                    "min_temp": min(values["temps"]),
-                    "max_temp": max(values["temps"]),
-                    "avg_temp": sum(values["temps"]) / len(values["temps"]),
-                    "humidity": sum(values["humidities"]) / len(values["humidities"]),
-                    "pressure": 1013,  # Default value since Open-Meteo doesn't provide pressure
-                    "wind_speed": max(values["wind_speeds"]),  # Use max wind speed
-                    "precipitation": total_precip,
-                    "weather_main": weather_main,
-                    "is_rainy": total_precip > 0,
-                    "is_sunny": total_precip == 0,
-                    "is_snowy": False  # Simplified; could check temp < 0 and precip > 0
-                }
-                historical_data.append(daily_dict)
-
-            # Cache the result
-            self._set_cached_data(cache_key, historical_data)
-            data_logger.info(f"Retrieved {len(historical_data)} days of historical weather data from Open-Meteo")
-
-            return historical_data
-
-        except Exception as e:
-            data_logger.error(f"Error getting historical weather from Open-Meteo: {str(e)}")
-            data_logger.error(traceback.format_exc())
             return []
-    '''
-
-        
-
+    
     def get_historical_weather(self, start_date: str, end_date: str) -> List[Dict[str, Any]]:
         """
-        Get historical weather data for Sheffield from Open-Meteo API, aggregated to daily summaries
+        Get historical weather data for Sheffield using Open-Meteo's archive API
         
         Args:
             start_date: Start date (YYYY-MM-DD)
@@ -449,10 +358,11 @@ class WeatherService:
             # Check cache first
             cache_key = f"historical_{start_date}_{end_date}"
             is_valid, cached_data = self._get_cached_data(cache_key)
+            
             if is_valid:
                 data_logger.info(f"Using cached historical data for {start_date} to {end_date}")
                 return cached_data
-
+            
             # Check if end_date is today or in the future
             end_date_obj = datetime.strptime(end_date, "%Y-%m-%d")
             today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
@@ -462,93 +372,92 @@ class WeatherService:
                 end_date_obj = today - timedelta(days=1)
                 end_date = end_date_obj.strftime("%Y-%m-%d")
                 data_logger.info(f"Adjusted end date to yesterday: {end_date}")
-
-            # Construct Open-Meteo API URL for hourly data
-            url = (f"https://archive-api.open-meteo.com/v1/archive?"
-                f"latitude={self.lat}&longitude={self.lon}&"
-                f"start_date={start_date}&end_date={end_date}&"
-                f"hourly=temperature_2m,precipitation,relative_humidity_2m,wind_speed_10m")
-
-            # Make API request
-            response = requests.get(url)
-            if response.status_code != 200:
-                data_logger.error(f"Error from Open-Meteo API: {response.status_code} - {response.text}")
-                return []
-
-            data = response.json()
-            hourly_data = data.get("hourly", {})
             
-            # Extract hourly data
-            times = hourly_data.get("time", [])
-            temps = hourly_data.get("temperature_2m", [])
-            precipitations = hourly_data.get("precipitation", [])
-            humidities = hourly_data.get("relative_humidity_2m", [])
-            wind_speeds = hourly_data.get("wind_speed_10m", [])
-
-            # Aggregate hourly data into daily summaries
-            daily_data = {}
-            for i, timestamp in enumerate(times):
-                if i >= len(temps) or i >= len(precipitations) or i >= len(humidities) or i >= len(wind_speeds):
-                    continue  # Skip if any data is missing for this timestamp
-                    
-                date = timestamp.split("T")[0]  # Extract date (YYYY-MM-DD)
-                if date not in daily_data:
-                    daily_data[date] = {
-                        "temps": [],
-                        "precipitations": [],
-                        "humidities": [],
-                        "wind_speeds": []
-                    }
-                    
-                # Only add non-None values
-                if temps[i] is not None:
-                    daily_data[date]["temps"].append(temps[i])
-                if precipitations[i] is not None:
-                    daily_data[date]["precipitations"].append(precipitations[i])
-                if humidities[i] is not None:
-                    daily_data[date]["humidities"].append(humidities[i])
-                if wind_speeds[i] is not None:
-                    daily_data[date]["wind_speeds"].append(wind_speeds[i])
-
-            # Build daily historical data list
+            # Make API request to Open-Meteo Archive
+            params = {
+                "latitude": self.lat,
+                "longitude": self.lon,
+                "start_date": start_date,
+                "end_date": end_date,
+                "daily": [
+                    "weather_code", 
+                    "temperature_2m_max", 
+                    "temperature_2m_min",
+                    "apparent_temperature_max",
+                    "apparent_temperature_min",
+                    "precipitation_sum",
+                    "rain_sum",
+                    "snowfall_sum",
+                    "precipitation_hours",
+                    "wind_speed_10m_max",
+                    "wind_gusts_10m_max",
+                    "wind_direction_10m_dominant",
+                    "shortwave_radiation_sum"
+                ],
+                "timezone": "GMT"  # Use GMT timezone for consistency
+            }
+            
+            response = requests.get(self.historical_api_url, params=params)
+            
+            if response.status_code != 200:
+                data_logger.error(f"Error from Open-Meteo Archive API: {response.status_code} - {response.text}")
+                return []
+            
+            data = response.json()
+            daily_data = data.get("daily", {})
+            daily_time = daily_data.get("time", [])
+            
+            # Process the historical data
             historical_data = []
-            for date, values in daily_data.items():
-                # Skip days with no temperature data
-                if not values["temps"]:
-                    continue
-                    
-                total_precip = sum(values["precipitations"]) if values["precipitations"] else 0
-                weather_main = "Rain" if total_precip > 0 else "Clear"
+            
+            for i in range(len(daily_time)):
+                date_str = daily_time[i]
+                weather_code = daily_data.get("weather_code", [])[i] if "weather_code" in daily_data else None
+                weather_main, _ = self._get_weather_description(weather_code) if weather_code is not None else ("Unknown", "Unknown")
                 
-                # Safe calculations with null checking
-                daily_dict = {
-                    "date": date,
-                    "min_temp": min(values["temps"]) if values["temps"] else 0,
-                    "max_temp": max(values["temps"]) if values["temps"] else 0,
-                    "avg_temp": sum(values["temps"]) / len(values["temps"]) if values["temps"] else 0,
-                    "humidity": sum(values["humidities"]) / len(values["humidities"]) if values["humidities"] else 50,
-                    "pressure": 1013,  # Default value since Open-Meteo doesn't provide pressure
-                    "wind_speed": max(values["wind_speeds"]) if values["wind_speeds"] else 0,
-                    "precipitation": total_precip,
+                daily_record = {
+                    "date": date_str,
+                    "min_temp": daily_data.get("temperature_2m_min", [])[i] if "temperature_2m_min" in daily_data else None,
+                    "max_temp": daily_data.get("temperature_2m_max", [])[i] if "temperature_2m_max" in daily_data else None,
+                    "avg_temp": (daily_data.get("temperature_2m_min", [])[i] + daily_data.get("temperature_2m_max", [])[i]) / 2 if "temperature_2m_min" in daily_data and "temperature_2m_max" in daily_data else None,
+                    "min_feels_like": daily_data.get("apparent_temperature_min", [])[i] if "apparent_temperature_min" in daily_data else None,
+                    "max_feels_like": daily_data.get("apparent_temperature_max", [])[i] if "apparent_temperature_max" in daily_data else None,
+                    "precipitation": daily_data.get("precipitation_sum", [])[i] if "precipitation_sum" in daily_data else None,
+                    "rain": daily_data.get("rain_sum", [])[i] if "rain_sum" in daily_data else None,
+                    "snowfall": daily_data.get("snowfall_sum", [])[i] if "snowfall_sum" in daily_data else None,
+                    "precipitation_hours": daily_data.get("precipitation_hours", [])[i] if "precipitation_hours" in daily_data else None,
+                    "wind_speed": daily_data.get("wind_speed_10m_max", [])[i] if "wind_speed_10m_max" in daily_data else None,
+                    "wind_gusts": daily_data.get("wind_gusts_10m_max", [])[i] if "wind_gusts_10m_max" in daily_data else None,
+                    "wind_direction": daily_data.get("wind_direction_10m_dominant", [])[i] if "wind_direction_10m_dominant" in daily_data else None,
+                    "radiation": daily_data.get("shortwave_radiation_sum", [])[i] if "shortwave_radiation_sum" in daily_data else None,
+                    "weather_code": weather_code,
                     "weather_main": weather_main,
-                    "is_rainy": total_precip > 0,
-                    "is_sunny": total_precip == 0,
-                    "is_snowy": False  # Simplified; could check temp < 0 and precip > 0
+                    "is_rainy": weather_main in ["Rain", "Rain Showers", "Drizzle", "Freezing Rain", "Freezing Drizzle", "Thunderstorm"],
+                    "is_snowy": weather_main in ["Snow", "Snow Showers"],
+                    "is_sunny": weather_main in ["Clear", "Mainly Clear", "Partly Cloudy"],
+                    "is_cloudy": weather_main in ["Partly Cloudy", "Overcast"],
+                    "humidity": 65  # Estimate as humidity not directly available in daily data
                 }
-                historical_data.append(daily_dict)
 
+                # If 'apparent_temperature' is not available, use then compute feels_like from  min_feels_like and max_feels_like else from  apparent_temperature
+                if "apparent_temperature" not in daily_data:
+                    daily_record["feels_like"] = (daily_record["min_feels_like"] + daily_record["max_feels_like"]) / 2
+                else:
+                    daily_record["feels_like"] = daily_data.get("apparent_temperature", [])[i]
+                
+                historical_data.append(daily_record)
+            
             # Cache the result
             self._set_cached_data(cache_key, historical_data)
-            data_logger.info(f"Retrieved {len(historical_data)} days of historical weather data from Open-Meteo")
-
+            data_logger.info(f"Retrieved {len(historical_data)} days of historical weather data")
+            
             return historical_data
-
+            
         except Exception as e:
-            data_logger.error(f"Error getting historical weather from Open-Meteo: {str(e)}")
+            data_logger.error(f"Error getting historical weather: {str(e)}")
             data_logger.error(traceback.format_exc())
             return []
-
-    
+    '''
     def prepare_weather_for_prophet(self, start_date: str, end_date: str, forecast_days: int = 30) -> pd.DataFrame:
         """
         Prepare weather data for Prophet model (historical + forecast)
@@ -559,7 +468,7 @@ class WeatherService:
             forecast_days: Number of days to forecast
             
         Returns:
-            DataFrame with weather data ready for Prophet
+            DataFrame with enhanced weather data ready for Prophet
         """
         try:
             # Get historical data
@@ -567,8 +476,17 @@ class WeatherService:
             
             if not historical:
                 data_logger.warning(f"No historical weather data available for {start_date} to {end_date}.")
-                # Don't use synthetic data, return empty DataFrame with proper structure
-                return pd.DataFrame(columns=['ds', 'temperature', 'precipitation', 'rainy', 'sunny', 'temperature_squared'])
+                # Return empty DataFrame with proper structure
+                empty_columns = [
+                    'ds', 'temperature', 'temperature_min', 'temperature_max', 
+                    'precipitation', 'wind_speed', 'humidity', 'radiation',
+                    'is_rainy', 'is_snowy', 'is_sunny', 'is_cloudy', 
+                    'temp_delta', 'feels_like', 'weather_code',
+                    'precipitation_hours', 'precipitation_intensity'
+                ]
+                return pd.DataFrame(columns=empty_columns)
+            
+
             
             # Get forecast data
             forecast = self.get_forecast(forecast_days)
@@ -580,69 +498,248 @@ class WeatherService:
                 data_logger.warning(f"No forecast weather data available. Using only historical data.")
                 combined = historical
             
+
             # Convert to DataFrame
             df = pd.DataFrame(combined)
             
             # Ensure date is properly formatted
             df['ds'] = pd.to_datetime(df['date'])
             
-            # Select and rename columns for Prophet
-            prophet_df = df[['ds', 'avg_temp', 'precipitation', 'is_rainy', 'is_sunny']].copy()
+            # Create derived features
             
-            # Fill NaN values before converting to int
-            for col in ['is_rainy', 'is_sunny']:
-                # First fill NaN values with 0
-                prophet_df[col] = prophet_df[col].fillna(0)
-                # Then convert to int
-                prophet_df[col] = prophet_df[col].astype(int)
+            # 1. Temperature delta (daily temperature range)
+            df['temp_delta'] = df['max_temp'] - df['min_temp']
+            
+            # 2. Average feels like temperature
+            df['feels_like'] = (df['min_feels_like'] + df['max_feels_like']) / 2
+            
+            # 3. Calculate precipitation intensity (mm per hour when it rains)
+            df['precipitation_intensity'] = df.apply(
+                lambda x: x['precipitation'] / max(x['precipitation_hours'], 1) if pd.notnull(x['precipitation']) and pd.notnull(x['precipitation_hours']) else 0, 
+                axis=1
+            )
+            
+            # 4. Weather pattern types - convert to numeric (already added in get_historical/forecast)
+            df['is_rainy'] = df['is_rainy'].astype(int)
+            df['is_snowy'] = df['is_snowy'].astype(int)
+            df['is_sunny'] = df['is_sunny'].astype(int)
+            df['is_cloudy'] = df['is_cloudy'].astype(int)
+            
+            # 5. Select and rename final columns for Prophet
+            prophet_df = df[[
+                'ds', 'avg_temp', 'min_temp', 'max_temp', 
+                'precipitation', 'wind_speed', 'humidity', 'radiation',
+                'is_rainy', 'is_snowy', 'is_sunny', 'is_cloudy', 
+                'temp_delta', 'feels_like', 'weather_code',
+                'precipitation_hours', 'precipitation_intensity'
+            ]].copy()
             
             # Rename to standardized names
             prophet_df = prophet_df.rename(columns={
-                'avg_temp': 'temperature',
-                'is_rainy': 'rainy',
-                'is_sunny': 'sunny'
+                'avg_temp': 'temperature'
             })
             
-            # Add temperature squared for non-linear effects
-            prophet_df['temperature_squared'] = prophet_df['temperature'] ** 2
+            # Fill any remaining NaN values with appropriate defaults
+            # Use appropriate imputation strategies for each column
+            for col in prophet_df.columns:
+                if col == 'ds':
+                    continue
+                    
+                # Different imputation strategies based on the variable type
+                if col in ['temperature', 'min_temp', 'max_temp', 'feels_like']:
+                    # For temperature variables, use the mean
+                    prophet_df[col] = prophet_df[col].fillna(prophet_df[col].mean())
+                elif col in ['precipitation', 'precipitation_hours', 'precipitation_intensity']:
+                    # For precipitation variables, use 0
+                    prophet_df[col] = prophet_df[col].fillna(0)
+                elif col in ['is_rainy', 'is_snowy', 'is_sunny', 'is_cloudy']:
+                    # For binary flags, use 0
+                    prophet_df[col] = prophet_df[col].fillna(0)
+                else:
+                    # For other variables, use the median (more robust to outliers)
+                    prophet_df[col] = prophet_df[col].fillna(prophet_df[col].median())
             
-            data_logger.info(f"Prepared weather data for Prophet with {len(prophet_df)} rows")
-            
+            data_logger.info(f"Prepared enhanced weather data for Prophet with {len(prophet_df)} rows")
             return prophet_df
             
         except Exception as e:
             data_logger.error(f"Error preparing weather for Prophet: {str(e)}")
             data_logger.error(traceback.format_exc())
-            # Return empty DataFrame with proper structure 
-            return pd.DataFrame(columns=['ds', 'temperature', 'precipitation', 'rainy', 'sunny', 'temperature_squared'])
+            # Return empty DataFrame with proper structure
+            empty_columns = [
+                'ds', 'temperature', 'temperature_min', 'temperature_max', 
+                'precipitation', 'wind_speed', 'humidity', 'radiation',
+                'is_rainy', 'is_snowy', 'is_sunny', 'is_cloudy', 
+                'temp_delta', 'feels_like', 'weather_code',
+                'precipitation_hours', 'precipitation_intensity'
+            ]
+            return pd.DataFrame(columns=empty_columns)
+    '''
 
-# Test function
+    def prepare_weather_for_prophet(self, start_date: str, end_date: str, forecast_days: int = 30) -> pd.DataFrame:
+        """
+        Prepare weather data for Prophet model (historical + forecast)
+        
+        Args:
+            start_date: Start date for historical data (YYYY-MM-DD)
+            end_date: End date for historical data (YYYY-MM-DD)
+            forecast_days: Number of days to forecast
+            
+        Returns:
+            DataFrame with enhanced weather data ready for Prophet
+        """
+        try:
+            # Get historical data
+            historical = self.get_historical_weather(start_date, end_date)
+            
+            if not historical:
+                data_logger.warning(f"No historical weather data available for {start_date} to {end_date}.")
+                # Return empty DataFrame with proper structure
+                empty_columns = [
+                'ds', 'temperature', 'min_temp', 'max_temp', 'min_feels_like', 'max_feels_like', 'rain', 
+                'snowfall',  'precipitation', 'wind_speed', 'radiation',
+                'is_rainy', 'is_snowy', 'is_sunny', 'is_cloudy', 
+                'temp_delta', 'feels_like', 
+                'precipitation_hours', 'precipitation_intensity'
+                ]
+                return pd.DataFrame(columns=empty_columns)
+            
+            # Get forecast data
+            forecast = self.get_forecast(forecast_days)
+            
+            # Calculate the gap between historical end_date and forecast start date
+            end_date_obj = datetime.strptime(end_date, "%Y-%m-%d")
+            today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+
+            # If there's a gap between end_date and today (start of forecast), fill it with historical data
+            if end_date_obj < today:
+                # Calculate the gap period
+                gap_start = (end_date_obj + timedelta(days=1)).strftime("%Y-%m-%d")
+                gap_end = (today - timedelta(days=1)).strftime("%Y-%m-%d")
+                
+                # Only fetch gap data if there's actually a gap (at least one day)
+                if datetime.strptime(gap_start, "%Y-%m-%d") <= datetime.strptime(gap_end, "%Y-%m-%d"):
+                    data_logger.info(f"Fetching historical data for gap period: {gap_start} to {gap_end}")
+                    try:
+                        gap_data = self.get_historical_weather(gap_start, gap_end)
+                    except:
+                        try:
+                            gap_end = (today - timedelta(days=2)).strftime("%Y-%m-%d")
+                            gap_data = self.get_historical_weather(gap_start, gap_end)
+                        except:
+                            gap_end = (today - timedelta(days=3)).strftime("%Y-%m-%d")
+                            gap_data = self.get_historical_weather(gap_start, gap_end)                            
+
+                    # Add the gap data to historical
+                    if gap_data:
+                        historical.extend(gap_data)
+                        data_logger.info(f"Added {len(gap_data)} days of historical data to fill the gap")
+            
+            # Combine data - handle case where forecast might be None
+            if forecast:
+                combined = historical + forecast
+
+            else:
+                data_logger.warning(f"No forecast weather data available. Using only historical data.")
+                combined = historical
+            
+            # Convert to DataFrame
+            df = pd.DataFrame(combined)
+
+            # save the dataframe to a csv file
+            #df.to_csv(f"weather_data.csv", index=False)
+            
+            # Ensure date is properly formatted
+            df['ds'] = pd.to_datetime(df['date'])
+            
+            # Create derived features
+            
+            # 1. Temperature delta (daily temperature range)
+            df['temp_delta'] = df['max_temp'] - df['min_temp']
+            
+            # 2. Average feels like temperature
+            
+            if 'feels_like' in df.columns:
+                df['feels_like'] = df['feels_like']
+            else:
+                df['feels_like'] = (df['min_feels_like'] + df['max_feels_like']) / 2
+
+            # 3. Calculate precipitation intensity (mm per hour when it rains)
+            df['precipitation_intensity'] = df.apply(
+                lambda x: x['precipitation'] / max(x['precipitation_hours'], 1) if pd.notnull(x['precipitation']) and pd.notnull(x['precipitation_hours']) else 0, 
+                axis=1
+            )
+            
+            # 4. Weather pattern types - convert to numeric (already added in get_historical/forecast)
+            df['is_rainy'] = df['is_rainy'].astype(int)
+            df['is_snowy'] = df['is_snowy'].astype(int)
+            df['is_sunny'] = df['is_sunny'].astype(int)
+            df['is_cloudy'] = df['is_cloudy'].astype(int)
+            
+            # 5. Select and rename final columns for Prophet
+            prophet_df = df[[
+                'ds', 'avg_temp', 'min_temp', 'max_temp', 'min_feels_like', 'max_feels_like', 'rain', 
+                'snowfall',  'precipitation', 'wind_speed', 'radiation',
+                'is_rainy', 'is_snowy', 'is_sunny', 'is_cloudy', 
+                'temp_delta', 'feels_like', 
+                'precipitation_hours', 'precipitation_intensity'
+            ]].copy()
+            
+            # Rename to standardized names
+            prophet_df = prophet_df.rename(columns={
+                'avg_temp': 'temperature'
+            })
+            
+            # Fill any remaining NaN values with appropriate defaults
+            # Use appropriate imputation strategies for each column
+            for col in prophet_df.columns:
+                if col == 'ds':
+                    continue
+                    
+                # Different imputation strategies based on the variable type
+                if col in ['temperature', 'min_temp', 'max_temp', 'min_feels_like', 'max_feels_like','feels_like', 'temp_delta']:
+                    # For these variables, use the mean
+                    prophet_df[col] = prophet_df[col].fillna(prophet_df[col].mean())
+                elif col in ['precipitation', 'precipitation_hours', 'precipitation_intensity', 'rain', 'snowfall', 'radiation']:
+                    # For precipitation variables, use 0
+                    prophet_df[col] = prophet_df[col].fillna(0)
+                elif col in ['is_rainy', 'is_snowy', 'is_sunny', 'is_cloudy']:
+                    # For binary flags, use 0
+                    prophet_df[col] = prophet_df[col].fillna(0)
+                else:
+                    # For other variables, use the median (more robust to outliers)
+                    prophet_df[col] = prophet_df[col].fillna(prophet_df[col].median())
+            
+            data_logger.info(f"Prepared enhanced weather data for Prophet with {len(prophet_df)} rows")
+
+            # save the prophet_df to a csv file
+            #prophet_df.to_csv(f"weather_data_prophet.csv", index=False)
+
+            return prophet_df
+            
+        except Exception as e:
+            data_logger.error(f"Error preparing weather for Prophet: {str(e)}")
+            data_logger.error(traceback.format_exc())
+            # Return empty DataFrame with proper structure
+            empty_columns = [
+                'ds', 'temperature', 'temperature_min', 'temperature_max', 
+                'precipitation', 'wind_speed', 'humidity', 'radiation',
+                'is_rainy', 'is_snowy', 'is_sunny', 'is_cloudy', 
+                'temp_delta', 'feels_like', 'weather_code',
+                'precipitation_hours', 'precipitation_intensity'
+            ]
+            return pd.DataFrame(columns=empty_columns)
+        
+        
 def test_weather_service():
-    """Test the WeatherService functionality"""
-    service = WeatherService()
-    
-    # Test current weather
-    current = service.get_current_weather()
-    print(f"Current weather: {current['temperature']}°C, {current['weather_main']}")
-    
-    # Test forecast
-    forecast = service.get_forecast(days=5)
-    print(f"5-day forecast: {len(forecast)} days")
-    for day in forecast:
-        print(f"{day['date']}: {day['min_temp']}°C to {day['max_temp']}°C, {day['weather_main']}")
-    
-    # Test historical
-    historical = service.get_historical_weather('2024-01-01', '2025-02-28')
-    print(f"Historical data: {len(historical)} days")
-    
-    # Test preparation for Prophet
-    prophet_data = service.prepare_weather_for_prophet('2024-01-01', '2025-02-28', 30)
-    print(f"Prophet data: {len(prophet_data)} rows")
-    print(f"Columns: {prophet_data.columns.tolist()}")
-    print(f"Sample data:\n{prophet_data.head()}")
-    
-    return "Weather service test completed successfully"
+    weather_service = WeatherService()
+    print(weather_service.get_current_weather())
+    print(weather_service.get_forecast())
+    print(weather_service.get_historical_weather("2024-01-01", "2024-01-31"))
+    print(weather_service.prepare_weather_for_prophet("2024-01-01", "2024-01-31"))
 
 if __name__ == "__main__":
     test_weather_service()
+
+
 

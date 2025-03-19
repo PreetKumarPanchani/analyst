@@ -219,9 +219,20 @@ const SalesForecastDashboard = () => {
                   dataKey="actual" 
                   stroke="#3b82f6" 
                   strokeWidth={2} 
-                  dot={(props) => <circle {...props} r={3} />}
-                  activeDot={(props) => <circle {...props} r={6} />}
-                  name="Actual"
+                  dot={(props) => {
+                    if (props && props.payload && props.payload.actual !== null) {
+                      const { dataKey, key, ...restProps } = props;
+                      return <circle key={key} {...restProps} r={3} />;
+                    } else {
+                      return null; // Hide dot completely for null points
+                    }
+                  }}
+                  activeDot={(props) => {
+                    const { dataKey, key, ...restProps } = props;
+                    return <circle key={key} {...restProps} r={6} />;
+                  }}
+                  name="Actual Revenue"
+                  isAnimationActive={false}
                 />
                 <Line 
                   type="monotone" 
@@ -230,7 +241,15 @@ const SalesForecastDashboard = () => {
                   strokeWidth={2}
                   name="Forecast" 
                   strokeDasharray="5 5"
-                  dot={(props) => <circle {...props} r={0} />}
+                  dot={(props) => {
+                    // Only show dots for predicted values in the forecast period
+                    if (props && props.payload && props.payload.isForecasted) {
+                      const { key, dataKey, ...restProps } = props;
+                      return <circle key={key} {...restProps} r={3} />;
+                    } else {
+                      return null;
+                    }
+                  }}
                 />
                 <Line 
                   type="monotone" 

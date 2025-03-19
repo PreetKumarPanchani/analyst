@@ -14,8 +14,11 @@ from app.core.logger import data_logger
 from app.services.events_service import EventsService
 from app.services.weather_service import WeatherService
 from app.data.processor import DataProcessor
+#from app.models.prophet_model_enhanced import ProphetModel
 from app.models.prophet_model import ProphetModel
-from app.models.timegpt_model import TimeGPTModel
+from app.core.config import settings
+from app.services.s3_service import S3Service
+import os
 
 
 class ForecastService:
@@ -33,36 +36,19 @@ class ForecastService:
         self.model_dir = model_dir
         self.cache_dir = cache_dir
         self.data_dir = data_dir
+        self.s3_service = S3Service()
+        self.use_s3 = settings.USE_S3_STORAGE
         
-        # Create directories
-        os.makedirs(self.processed_dir, exist_ok=True)
-        os.makedirs(self.model_dir, exist_ok=True)
-        os.makedirs(self.cache_dir, exist_ok=True)
-        os.makedirs(self.data_dir, exist_ok=True)
+        # Create directories if not using S3
+        if not self.use_s3:
+            os.makedirs(self.processed_dir, exist_ok=True)
+            os.makedirs(self.model_dir, exist_ok=True)
+            os.makedirs(self.cache_dir, exist_ok=True)
+            os.makedirs(self.data_dir, exist_ok=True)
         
         # Initialize services
         self.processor = DataProcessor(processed_dir)
         self.prophet_model = ProphetModel(model_dir)
-        
-        # Initialize TimeGPT model if API key is available
-        try:
-            from dotenv import load_dotenv
-            load_dotenv()
-            
-            api_key = os.environ.get('TIMEGPT_API_KEY')
-            if api_key:
-                self.timegpt_model = TimeGPTModel(model_dir, api_key=api_key)
-                data_logger.info(f"TimeGPTModel initialized")
-            else:
-                self.timegpt_model = None
-                data_logger.warning(f"TimeGPTModel not initialized (missing API key)")
-        except ImportError:
-            self.timegpt_model = None
-            data_logger.warning(f"TimeGPTModel not available (import error)")
-        except Exception as e:
-            self.timegpt_model = None
-            data_logger.error(f"Error initializing TimeGPTModel: {str(e)}")
-        
         self.events_service = EventsService(cache_dir)
         self.weather_service = WeatherService(cache_dir=cache_dir)
         
@@ -80,12 +66,30 @@ class ForecastService:
             Success flag
         """
         try:
-            cache_path = os.path.join(self.cache_dir, f"forecast_{model_id}.json")
-            
-            with open(cache_path, 'w') as f:
-                json.dump(data, f)
+            if self.use_s3:
+                # Save to S3
+                s3_key = f"{settings.S3_CACHE_PREFIX}forecast_{model_id}.json"
                 
-            data_logger.info(f"Saved forecast data to: {cache_path}")
+                # Convert data to JSON string
+                json_str = json.dumps(data)
+                
+                # Use put_object directly
+                self.s3_service.s3_client.put_object(
+                    Bucket=self.s3_service.bucket_name,
+                    Key=s3_key,
+                    Body=json_str
+                )
+                
+                data_logger.info(f"Saved forecast data to S3: {s3_key}")
+            else:
+                # Save to local filesystem
+                cache_path = os.path.join(self.cache_dir, f"forecast_{model_id}.json")
+                
+                with open(cache_path, 'w') as f:
+                    json.dump(data, f)
+                    
+                data_logger.info(f"Saved forecast data to: {cache_path}")
+                
             return True
             
         except Exception as e:
@@ -104,16 +108,37 @@ class ForecastService:
             Forecast data dictionary (or None if not found)
         """
         try:
-            cache_path = os.path.join(self.cache_dir, f"forecast_{model_id}.json")
-            
-            if not os.path.exists(cache_path):
-                return None
+            if self.use_s3:
+                # Load from S3
+                s3_key = f"{settings.S3_CACHE_PREFIX}forecast_{model_id}.json"
                 
-            with open(cache_path, 'r') as f:
-                data = json.load(f)
+                if not self.s3_service.file_exists(s3_key):
+                    return None
+                    
+                # Get the JSON from S3
+                response = self.s3_service.s3_client.get_object(
+                    Bucket=self.s3_service.bucket_name,
+                    Key=s3_key
+                )
+                json_str = response['Body'].read().decode('utf-8')
                 
-            data_logger.info(f"Loaded forecast data from: {cache_path}")
-            return data
+                # Load JSON
+                data = json.loads(json_str)
+                
+                data_logger.info(f"Loaded forecast data from S3: {s3_key}")
+                return data
+            else:
+                # Load from local filesystem
+                cache_path = os.path.join(self.cache_dir, f"forecast_{model_id}.json")
+                
+                if not os.path.exists(cache_path):
+                    return None
+                    
+                with open(cache_path, 'r') as f:
+                    data = json.load(f)
+                    
+                data_logger.info(f"Loaded forecast data from: {cache_path}")
+                return data
             
         except Exception as e:
             data_logger.error(f"Error loading forecast data: {str(e)}")
@@ -133,11 +158,14 @@ class ForecastService:
         Returns:
             Success flag
         """
-        try:
+        if not self.use_s3:
             # Create directory path
             dir_path = os.path.join(self.data_dir, company, forecast_type)
             os.makedirs(dir_path, exist_ok=True)
             
+
+        try:
+
             # Create file name based on forecast type
             if forecast_type == "revenue":
                 file_name = f"{company}_prophet_revenue_data.csv"
@@ -150,76 +178,74 @@ class ForecastService:
             else:
                 file_name = f"{company}_prophet_{forecast_type}_data.csv"
             
-            # Save DataFrame to CSV
-            file_path = os.path.join(dir_path, file_name)
-            prophet_df.to_csv(file_path, index=False)
-            
-            data_logger.info(f"Saved Prophet data to: {file_path}")
-            print(f"Prophet dataframe saved to: {file_path}")
-            
-            return True
+            if self.use_s3:
+                # Save to S3
+                s3_key = f"{settings.S3_CACHE_PREFIX}{company}/{forecast_type}/{file_name}"
+                success = self.s3_service.write_csv_file(prophet_df, s3_key)
+                
+                if success:
+                    data_logger.info(f"Saved Prophet data to S3: {s3_key}")
+                    print(f"Prophet dataframe saved to S3: {s3_key}")
+                
+                return success
+            else:
+                # Save to local filesystem
+                # Create directory path
+                dir_path = os.path.join(self.data_dir, company, forecast_type)
+                if not self.use_s3: 
+                    os.makedirs(dir_path, exist_ok=True)
+                
+                # Save DataFrame to CSV
+                file_path = os.path.join(dir_path, file_name)
+                prophet_df.to_csv(file_path, index=False)
+                
+                data_logger.info(f"Saved Prophet data to: {file_path}")
+                print(f"Prophet dataframe saved to: {file_path}")
+                
+                return True
             
         except Exception as e:
             data_logger.error(f"Error saving Prophet data: {str(e)}")
             data_logger.error(traceback.format_exc())
             return False
-
-    def _save_timegpt_data(self, company: str, forecast_type: str, identifier: str, timegpt_df: pd.DataFrame) -> bool:
+    
+    # Fill the extra ds values in prophet_df, dont fill y values, only ds, it must have the new dates at last and the old dates at first and y values are the same as the old ones
+    def fill_extra_ds_values(self, prophet_df: pd.DataFrame, max_date: str, new_max_date: str) -> pd.DataFrame:
         """
-        Save TimeGPT input data to CSV
+        Add future dates to a Prophet DataFrame without filling any values.
+        Only adds the 'ds' column entries for future dates.
         
         Args:
-            company: Company name
-            forecast_type: Type of forecast (revenue, category, or product)
-            identifier: Category or product name (for category/product forecasts)
-            timegpt_df: TimeGPT input DataFrame
+            prophet_df: DataFrame with ds (dates) and y (values) columns
+            max_date: String representation of the last date in the existing data
+            new_max_date: String representation of the last date for the extended range
             
         Returns:
-            Success flag
+            DataFrame with additional future dates appended
         """
-        try:
-            # Create directory path
-            dir_path = os.path.join(self.data_dir, company, forecast_type)
-            os.makedirs(dir_path, exist_ok=True)
-            
-            # Create file name based on forecast type
-            if forecast_type == "revenue":
-                file_name = f"{company}_timegpt_revenue_data.csv"
-            elif forecast_type == "category":
-                safe_identifier = identifier.replace(" ", "_").replace("/", "_")
-                file_name = f"{company}_timegpt_{safe_identifier}_category_data.csv"
-            elif forecast_type == "product":
-                safe_identifier = identifier.replace(" ", "_").replace("/", "_").replace("(", "").replace(")", "").replace(",", "").replace("-", "_")
-                file_name = f"{company}_timegpt_{safe_identifier}_product_data.csv"
-            else:
-                file_name = f"{company}_timegpt_{forecast_type}_data.csv"
-            
-            # Save DataFrame to CSV
-            file_path = os.path.join(dir_path, file_name)
-            timegpt_df.to_csv(file_path, index=False)
-            
-            data_logger.info(f"Saved TimeGPT data to: {file_path}")
-            print(f"TimeGPT dataframe saved to: {file_path}")
-            
-            return True
-            
-        except Exception as e:
-            data_logger.error(f"Error saving TimeGPT data: {str(e)}")
-            data_logger.error(traceback.format_exc())
-            return False
+        # Convert string dates to datetime objects
+        max_date_dt = pd.to_datetime(max_date)
+        new_max_date_dt = pd.to_datetime(new_max_date)
+        
+        # Create a date range from max_date to new_max_date (starting from day after max_date)
+        date_range = pd.date_range(start=max_date_dt + pd.Timedelta(days=1), end=new_max_date_dt)
+        
+        # Create a new DataFrame with just the date range and no y values
+        new_df = pd.DataFrame({'ds': date_range})
+        
+        # Concatenate original DataFrame with new dates
+        extended_df = pd.concat([prophet_df, new_df], ignore_index=True)
+        
+        return extended_df
+
     
     def forecast_company_revenue(self, 
                                company: str, 
-                               periods: int = 30,
+                               periods: int = 15,
                                include_weather: bool = True,
                                include_events: bool = True,
                                include_time_features: bool = True,
-                               force_retrain: bool = False,
-                               model_type: str = "prophet",
-                               finetune: bool = True,
-                               finetune_steps: int = 10,
-                               finetune_loss: str = "mse",
-                               finetune_depth: int = 2) -> Dict[str, Any]:
+                               force_retrain: bool = False) -> Dict[str, Any]:
         """
         Generate revenue forecast for a company
         
@@ -230,32 +256,16 @@ class ForecastService:
             include_events: Whether to include events data
             include_time_features: Whether to include time-based features
             force_retrain: Whether to force model retraining
-            model_type: Model type to use ('prophet' or 'timegpt')
-            finetune: Whether to fine-tune the TimeGPT model
-            finetune_steps: Number of steps for fine-tuning
-            finetune_loss: Loss function for fine-tuning
-            finetune_depth: Depth for fine-tuning
             
         Returns:
             Forecast dictionary
         """
         try:
-            # Check if using TimeGPT model
-            if model_type.lower() == "timegpt":
-                if not self.timegpt_model:
-                    data_logger.error("TimeGPT model not initialized (missing API key)")
-                    return {
-                        "success": False,
-                        "error": "TimeGPT model not available. Check API key."
-                    }
-                
-                # Model identifier for TimeGPT
-                model_id = f"{company}_revenue_timegpt"
-            else:
-                # Default to Prophet model
-                model_type = "prophet"
-                model_id = f"{company}_revenue"
-                
+            # Model identifier
+            model_id = f"{company}_revenue"
+            if not self.use_s3:
+                os.makedirs("debug", exist_ok=True)
+            
             # Check if forecast already exists in cache (if not forcing retrain)
             if not force_retrain:
                 cached_forecast = self._load_forecast_data(model_id)
@@ -275,146 +285,99 @@ class ForecastService:
             
             daily_sales = processed_data["daily_sales"]
             
+            # Prepare data for Prophet
+            prophet_df = self.prophet_model.prepare_data_for_prophet(daily_sales, "total_revenue")
+            
             # Get date range for external data
             min_date = daily_sales["date"].min().strftime("%Y-%m-%d")
             max_date = daily_sales["date"].max().strftime("%Y-%m-%d")
+            
+            # Fill the extra ds values in prophet_df, dont fill y values, only ds
+            new_max_date = pd.to_datetime(max_date) + pd.Timedelta(days=periods)
+            prophet_df = self.fill_extra_ds_values(prophet_df, max_date, new_max_date)
 
-            # Handle forecast based on model type
-            if model_type == "timegpt":
-                # Prepare data for TimeGPT
-                timegpt_df = self.timegpt_model.prepare_data_for_timegpt(daily_sales, "total_revenue")
-                
-                # Add events data if requested
-                if include_events:
-                    data_logger.info(f"Adding events data to forecast")
-                    events_df = self.events_service.prepare_events_for_prophet(min_date, max_date, periods)
-                    timegpt_df = self.timegpt_model.add_events_features(timegpt_df, events_df)
-                
-                # Add weather data if requested
-                if include_weather:
-                    data_logger.info(f"Adding weather data to forecast")
-                    weather_df = self.weather_service.prepare_weather_for_prophet(min_date, max_date, periods)
-                    timegpt_df = self.timegpt_model.add_weather_features(timegpt_df, weather_df)
-                
-                # Add time-based features if requested
-                if include_time_features:
-                    data_logger.info(f"Adding time-based features to forecast")
-                    timegpt_df = self.timegpt_model.add_time_features(timegpt_df)
-                
-                # Save TimeGPT dataframe for reference and transparency
-                self._save_timegpt_data(company, "revenue", "revenue", timegpt_df)
-                
-                # Generate forecast with TimeGPT
-                try:
-                    forecast = self.timegpt_model.generate_forecast(
-                        model_id,
-                        timegpt_df,
-                        freq="D",
-                        periods=periods,
-                        include_weather=include_weather,
-                        include_events=include_events,
-                        include_time_features=include_time_features,
-                        force_retrain=force_retrain,
-                        finetune=finetune,
-                        finetune_steps=finetune_steps,
-                        finetune_loss=finetune_loss,
-                        finetune_depth=finetune_depth
-                    )
-                except Exception as e:
-                    data_logger.error(f"Error in TimeGPT forecast: {str(e)}")
-                    data_logger.error(traceback.format_exc())
-                    
-                    # Fallback to simpler forecast without additional parameters
-                    forecast = self.timegpt_model.generate_forecast(
-                        model_id,
-                        timegpt_df,
-                        freq="D",
-                        periods=periods,
-                        include_weather=include_weather,
-                        include_events=include_events,
-                        include_time_features=include_time_features,
-                        force_retrain=force_retrain
-                    )
-            else:
-                # Prepare data for Prophet
-                prophet_df = self.prophet_model.prepare_data_for_prophet(daily_sales, "total_revenue")
-                
-                # Add events data if requested
-                if include_events:
-                    data_logger.info(f"Adding events data to forecast")
-                    events_df = self.events_service.prepare_events_for_prophet(min_date, max_date, periods)
-                    prophet_df = self.prophet_model.add_events_features(prophet_df, events_df)
-                
-                # Add weather data if requested
-                if include_weather:
-                    data_logger.info(f"Adding weather data to forecast")
-                    weather_df = self.weather_service.prepare_weather_for_prophet(min_date, max_date, periods)
-                    prophet_df = self.prophet_model.add_weather_features(prophet_df, weather_df)
-                
-                # Add time-based features if requested
-                if include_time_features:
-                    data_logger.info(f"Adding time-based features to forecast")
-                    prophet_df = self.prophet_model.add_time_features(prophet_df)
-                
-                # Save prophet dataframe for reference and transparency
-                self._save_prophet_data(company, "revenue", "revenue", prophet_df)
 
-                try:
-                    # Generate forecast
-                    forecast = self.prophet_model.generate_forecast(
-                        model_id,
-                        prophet_df,
-                        periods,
-                        include_weather,
-                        include_events,
-                        include_time_features,
-                        force_retrain,
-                        perform_cv=True,
-                        cv_params=None,
-                        tune_hyperparams=True,
-                        param_grid=None
-                    )
-                except:
-                    forecast = self.prophet_model.generate_forecast(
-                        model_id,
-                        prophet_df,
-                        periods,
-                        include_weather,
-                        include_events,
-                        include_time_features,
-                        force_retrain,
-                    )
+            # Add weather data if requested
+            if include_weather:
+                
+                data_logger.info(f"Adding weather data to forecast")
+                weather_df = self.weather_service.prepare_weather_for_prophet(min_date, max_date, periods)
+                
+                if not self.use_s3:
+                    weather_df.to_csv("debug/weather_df.csv", index=False)
+                prophet_df = self.prophet_model.add_weather_features(prophet_df, weather_df)
+                if not self.use_s3:
+                    prophet_df.to_csv("debug/prophet_df_with_weather.csv", index=False)
+            # Add events data if requested
+            if include_events:
+                data_logger.info(f"Adding events data to forecast")
+                events_df = self.events_service.prepare_events_for_prophet(min_date, max_date, periods)
+                prophet_df = self.prophet_model.add_events_features(prophet_df, events_df)
+                if not self.use_s3:
+                    prophet_df.to_csv("debug/prophet_df_with_events.csv", index=False)
+
+
+            # Add time-based features if requested
+            if include_time_features :
+                data_logger.info(f"Adding time-based features to forecast")
+                prophet_df = self.prophet_model.add_time_features(prophet_df)
+                if not self.use_s3:
+                    prophet_df.to_csv("debug/prophet_df_with_time_features.csv", index=False)
+            
+            # Save prophet dataframe for reference and transparency
+            self._save_prophet_data(company, "revenue", "revenue", prophet_df)
+
+            try:
+                # Generate forecast
+                forecast = self.prophet_model.generate_forecast(
+                model_id,
+                prophet_df,
+                periods,
+                include_weather,
+                include_events,
+                include_time_features,
+                force_retrain,
+                perform_cv=True,
+                cv_params=None,
+                tune_hyperparams=True,
+                param_grid=None
+
+            )
+        
+
+            except:
+                forecast = self.prophet_model.generate_forecast(
+                    model_id,
+                    prophet_df,
+                    periods,
+                    include_weather,
+                    include_events,
+                    include_time_features,
+                    force_retrain,
+                )
+            
             
             # Add metadata
             forecast["metadata"] = {
                 "company": company,
                 "target": "revenue",
-                "model_type": model_type,
                 "generated_at": datetime.now().isoformat(),
                 "periods": periods,
                 "include_weather": include_weather,
                 "include_events": include_events,
                 "include_time_features": include_time_features,
                 "force_retrain": force_retrain,
+                
                 "data_range": {
                     "start": min_date,
                     "end": max_date
                 }
             }
             
-            # Add TimeGPT-specific metadata if applicable
-            if model_type == "timegpt":
-                forecast["metadata"]["timegpt_params"] = {
-                    "finetune": finetune,
-                    "finetune_steps": finetune_steps,
-                    "finetune_loss": finetune_loss,
-                    "finetune_depth": finetune_depth,
-                }
-            
             # Save forecast data
             self._save_forecast_data(model_id, forecast)
             
-            data_logger.info(f"Generated revenue forecast for company: {company} using {model_type} model")
+            data_logger.info(f"Generated revenue forecast for company: {company}")
             return forecast
             
         except Exception as e:
@@ -428,16 +391,11 @@ class ForecastService:
     def forecast_category_sales(self, 
                               company: str, 
                               category: str,
-                              periods: int = 30,
+                              periods: int = 15,
                               include_weather: bool = True,
                               include_events: bool = True,
                               include_time_features: bool = True,
-                              force_retrain: bool = False,
-                              model_type: str = "prophet",
-                              finetune: bool = True,
-                              finetune_steps: int = 10,
-                              finetune_loss: str = "mse",
-                              finetune_depth: int = 2) -> Dict[str, Any]:
+                              force_retrain: bool = False) -> Dict[str, Any]:
         """
         Generate sales forecast for a specific category
         
@@ -449,34 +407,16 @@ class ForecastService:
             include_events: Whether to include events data
             include_time_features: Whether to include time-based features
             force_retrain: Whether to force model retraining
-            model_type: Model type to use ('prophet' or 'timegpt')
-            finetune: Whether to fine-tune the TimeGPT model
-            finetune_steps: Number of steps for fine-tuning
-            finetune_loss: Loss function for fine-tuning
-            finetune_depth: Depth for fine-tuning
             
         Returns:
             Forecast dictionary
         """
         try:
-            # Make safe for filename
+            # Model identifier - make safe for filename
             safe_category = category.replace(" ", "_").replace("/", "_")
-            
-            # Check if using TimeGPT model
-            if model_type.lower() == "timegpt":
-                if not self.timegpt_model:
-                    data_logger.error("TimeGPT model not initialized (missing API key)")
-                    return {
-                        "success": False,
-                        "error": "TimeGPT model not available. Check API key."
-                    }
-                
-                # Model identifier for TimeGPT
-                model_id = f"{company}_{safe_category}_category_timegpt"
-            else:
-                # Default to Prophet model
-                model_type = "prophet"
-                model_id = f"{company}_{safe_category}_category"
+            model_id = f"{company}_{safe_category}_category"
+            if not self.use_s3:
+                os.makedirs("debug", exist_ok=True)
             
             # Check if forecast already exists in cache (if not forcing retrain)
             if not force_retrain:
@@ -507,122 +447,82 @@ class ForecastService:
                     "error": f"No data found for category: {category}"
                 }
             
+            # Prepare data for Prophet
+            prophet_df = self.prophet_model.prepare_data_for_prophet(category_data, "quantity")
+            
             # Get date range for external data
             min_date = category_data["date"].min().strftime("%Y-%m-%d")
             max_date = category_data["date"].max().strftime("%Y-%m-%d")
             
-            # Handle forecast based on model type
-            if model_type == "timegpt":
-                # Prepare data for TimeGPT
-                timegpt_df = self.timegpt_model.prepare_data_for_timegpt(category_data, "quantity")
+            # Fill the extra ds values in prophet_df, dont fill y values, only ds
+            new_max_date = pd.to_datetime(max_date) + pd.Timedelta(days=periods)
+            prophet_df = self.fill_extra_ds_values(prophet_df, max_date, new_max_date)
+
+            # Add weather data if requested
+            if include_weather:
+                data_logger.info(f"Adding weather data to forecast")
+                weather_df = self.weather_service.prepare_weather_for_prophet(min_date, max_date, periods)
+                prophet_df = self.prophet_model.add_weather_features(prophet_df, weather_df)
                 
-                # Add events data if requested
-                if include_events:
-                    data_logger.info(f"Adding events data to forecast")
-                    events_df = self.events_service.prepare_events_for_prophet(min_date, max_date, periods)
-                    timegpt_df = self.timegpt_model.add_events_features(timegpt_df, events_df)
-                
-                # Add weather data if requested
-                if include_weather:
-                    data_logger.info(f"Adding weather data to forecast")
-                    weather_df = self.weather_service.prepare_weather_for_prophet(min_date, max_date, periods)
-                    timegpt_df = self.timegpt_model.add_weather_features(timegpt_df, weather_df)
-                
-                # Add time-based features if requested
-                if include_time_features:
-                    data_logger.info(f"Adding time-based features to forecast")
-                    timegpt_df = self.timegpt_model.add_time_features(timegpt_df)
-                
-                # Save TimeGPT dataframe for reference and transparency
-                self._save_timegpt_data(company, "category", category, timegpt_df)
-                
-                # Generate forecast with TimeGPT
-                try:
-                    forecast = self.timegpt_model.generate_forecast(
-                        model_id,
-                        timegpt_df,
-                        freq="D",
-                        periods=periods,
-                        include_weather=include_weather,
-                        include_events=include_events,
-                        include_time_features=include_time_features,
-                        force_retrain=force_retrain,
-                        finetune=finetune,
-                        finetune_steps=finetune_steps,
-                        finetune_loss=finetune_loss,
-                        finetune_depth=finetune_depth
-                    )
-                except Exception as e:
-                    data_logger.error(f"Error in TimeGPT forecast: {str(e)}")
-                    data_logger.error(traceback.format_exc())
-                    
-                    # Fallback to simpler forecast without additional parameters
-                    forecast = self.timegpt_model.generate_forecast(
-                        model_id,
-                        timegpt_df,
-                        freq="D",
-                        periods=periods,
-                        include_weather=include_weather,
-                        include_events=include_events,
-                        include_time_features=include_time_features,
-                        force_retrain=force_retrain
-                    )
-            else:
-                # Prepare data for Prophet
-                prophet_df = self.prophet_model.prepare_data_for_prophet(category_data, "quantity")
-                
-                # Add events data if requested
-                if include_events:
-                    data_logger.info(f"Adding events data to forecast")
-                    events_df = self.events_service.prepare_events_for_prophet(min_date, max_date, periods)
-                    prophet_df = self.prophet_model.add_events_features(prophet_df, events_df)
-                
-                # Add weather data if requested
-                if include_weather:
-                    data_logger.info(f"Adding weather data to forecast")
-                    weather_df = self.weather_service.prepare_weather_for_prophet(min_date, max_date, periods)
-                    prophet_df = self.prophet_model.add_weather_features(prophet_df, weather_df)
-                
-                # Add time-based features if requested
-                if include_time_features:
-                    data_logger.info(f"Adding time-based features to forecast")
-                    prophet_df = self.prophet_model.add_time_features(prophet_df)
+                # Save prophet data with weather for debugging
+                if not self.use_s3:
+                    prophet_df.to_csv("debug/prophet_df_with_weather_category.csv", index=False)
+
+            # Add events data if requested
+            if include_events:
+                data_logger.info(f"Adding events data to forecast")
+                events_df = self.events_service.prepare_events_for_prophet(min_date, max_date, periods)
+                prophet_df = self.prophet_model.add_events_features(prophet_df, events_df)
+
+                # Save prophet data with events for debugging
+                if not self.use_s3:
+                    prophet_df.to_csv("debug/prophet_df_with_events_category.csv", index=False)
+
+            # Add time-based features if requested
+            if include_time_features:
+                data_logger.info(f"Adding time-based features to forecast")
+                prophet_df = self.prophet_model.add_time_features(prophet_df)
+
+                # Save prophet data with time features for debugging
+                if not self.use_s3:
+                    prophet_df.to_csv("debug/prophet_df_with_time_features_category.csv", index=False)
+
+            # Save prophet dataframe for reference and transparency
+            self._save_prophet_data(company, "category", category, prophet_df)
             
-                # Save prophet dataframe for reference and transparency
-                self._save_prophet_data(company, "category", category, prophet_df)
-                
-                try:
-                    # Generate forecast
-                    forecast = self.prophet_model.generate_forecast(
-                        model_id,
-                        prophet_df,
-                        periods,
-                        include_weather,
-                        include_events,
-                        include_time_features,
-                        force_retrain,
-                        perform_cv=True,
-                        cv_params=None,
-                        tune_hyperparams=True,
-                        param_grid=None,
-                    )
-                except:
-                    forecast = self.prophet_model.generate_forecast(
-                        model_id,
-                        prophet_df,
-                        periods,
-                        include_weather,
-                        include_events,
-                        include_time_features,
-                        force_retrain,
-                    )
+            try:
+                # Generate forecast
+                forecast = self.prophet_model.generate_forecast(
+                model_id,
+                prophet_df,
+                periods,
+                include_weather,
+                include_events,
+                include_time_features,
+                force_retrain,
+                perform_cv=True,
+                cv_params=None,
+                tune_hyperparams=True,
+                param_grid=None,
+
+            )
+            except:
+                forecast = self.prophet_model.generate_forecast(
+                    model_id,
+                    prophet_df,
+                    periods,
+                    include_weather,
+                    include_events,
+                    include_time_features,
+                    force_retrain,
+                )
             
+
             # Add metadata
             forecast["metadata"] = {
                 "company": company,
                 "category": category,
                 "target": "quantity",
-                "model_type": model_type,
                 "generated_at": datetime.now().isoformat(),
                 "periods": periods,
                 "include_weather": include_weather,
@@ -635,19 +535,10 @@ class ForecastService:
                 }
             }
             
-            # Add TimeGPT-specific metadata if applicable
-            if model_type == "timegpt":
-                forecast["metadata"]["timegpt_params"] = {
-                    "finetune": finetune,
-                    "finetune_steps": finetune_steps,
-                    "finetune_loss": finetune_loss,
-                    "finetune_depth": finetune_depth,
-                }
-            
             # Save forecast data
             self._save_forecast_data(model_id, forecast)
             
-            data_logger.info(f"Generated sales forecast for company: {company}, category: {category} using {model_type} model")
+            data_logger.info(f"Generated sales forecast for company: {company}, category: {category}")
             return forecast
             
         except Exception as e:
@@ -661,16 +552,11 @@ class ForecastService:
     def forecast_product_sales(self, 
                              company: str, 
                              product: str,
-                             periods: int = 30,
+                             periods: int = 15,
                              include_weather: bool = True,
                              include_events: bool = True,
                              include_time_features: bool = True,
-                             force_retrain: bool = False,
-                             model_type: str = "prophet",
-                             finetune: bool = True,
-                             finetune_steps: int = 10,
-                             finetune_loss: str = "mse",
-                             finetune_depth: int = 2) -> Dict[str, Any]:
+                             force_retrain: bool = False) -> Dict[str, Any]:
         """
         Generate sales forecast for a specific product
         
@@ -682,35 +568,18 @@ class ForecastService:
             include_events: Whether to include events data
             include_time_features: Whether to include time-based features
             force_retrain: Whether to force model retraining
-            model_type: Model type to use ('prophet' or 'timegpt')
-            finetune: Whether to fine-tune the TimeGPT model
-            finetune_steps: Number of steps for fine-tuning
-            finetune_loss: Loss function for fine-tuning
-            finetune_depth: Depth for fine-tuning
             
         Returns:
             Forecast dictionary
         """
         try:
-            # Replace spaces and special chars
+            # Model identifier - replace spaces and special chars
             safe_product = product.replace(" ", "_").replace("(", "").replace(")", "").replace(",", "").replace("-", "_").replace("/", "_")
+            model_id = f"{company}_{safe_product}_product"
+            if not self.use_s3:
+                os.makedirs("debug", exist_ok=True)
             
-            # Check if using TimeGPT model
-            if model_type.lower() == "timegpt":
-                if not self.timegpt_model:
-                    data_logger.error("TimeGPT model not initialized (missing API key)")
-                    return {
-                        "success": False,
-                        "error": "TimeGPT model not available. Check API key."
-                    }
-                
-                # Model identifier for TimeGPT
-                model_id = f"{company}_{safe_product}_product_timegpt"
-            else:
-                # Default to Prophet model
-                model_type = "prophet"
-                model_id = f"{company}_{safe_product}_product"
-            
+
             # Check if forecast already exists in cache (if not forcing retrain)
             if not force_retrain:
                 cached_forecast = self._load_forecast_data(model_id)
@@ -740,122 +609,84 @@ class ForecastService:
                     "error": f"No data found for product: {product}"
                 }
             
+            # Prepare data for Prophet
+            prophet_df = self.prophet_model.prepare_data_for_prophet(product_data, "quantity")
+            
             # Get date range for external data
             min_date = product_data["date"].min().strftime("%Y-%m-%d")
             max_date = product_data["date"].max().strftime("%Y-%m-%d")
             
-            # Handle forecast based on model type
-            if model_type == "timegpt":
-                # Prepare data for TimeGPT
-                timegpt_df = self.timegpt_model.prepare_data_for_timegpt(product_data, "quantity")
-                
-                # Add events data if requested
-                if include_events:
-                    data_logger.info(f"Adding events data to forecast")
-                    events_df = self.events_service.prepare_events_for_prophet(min_date, max_date, periods)
-                    timegpt_df = self.timegpt_model.add_events_features(timegpt_df, events_df)
-                
-                # Add weather data if requested
-                if include_weather:
-                    data_logger.info(f"Adding weather data to forecast")
-                    weather_df = self.weather_service.prepare_weather_for_prophet(min_date, max_date, periods)
-                    timegpt_df = self.timegpt_model.add_weather_features(timegpt_df, weather_df)
-                
-                # Add time-based features if requested
-                if include_time_features:
-                    data_logger.info(f"Adding time-based features to forecast")
-                    timegpt_df = self.timegpt_model.add_time_features(timegpt_df)
-                
-                # Save TimeGPT dataframe for reference and transparency
-                self._save_timegpt_data(company, "product", product, timegpt_df)
-                
-                # Generate forecast with TimeGPT
-                try:
-                    forecast = self.timegpt_model.generate_forecast(
-                        model_id,
-                        timegpt_df,
-                        freq="D",
-                        periods=periods,
-                        include_weather=include_weather,
-                        include_events=include_events,
-                        include_time_features=include_time_features,
-                        force_retrain=force_retrain,
-                        finetune=finetune,
-                        finetune_steps=finetune_steps,
-                        finetune_loss=finetune_loss,
-                        finetune_depth=finetune_depth
-                    )
-                except Exception as e:
-                    data_logger.error(f"Error in TimeGPT forecast: {str(e)}")
-                    data_logger.error(traceback.format_exc())
-                    
-                    # Fallback to simpler forecast without additional parameters
-                    forecast = self.timegpt_model.generate_forecast(
-                        model_id,
-                        timegpt_df,
-                        freq="D",
-                        periods=periods,
-                        include_weather=include_weather,
-                        include_events=include_events,
-                        include_time_features=include_time_features,
-                        force_retrain=force_retrain
-                    )
-            else:
-                # Prepare data for Prophet
-                prophet_df = self.prophet_model.prepare_data_for_prophet(product_data, "quantity")
-                
-                # Add events data if requested
-                if include_events:
-                    data_logger.info(f"Adding events data to forecast")
-                    events_df = self.events_service.prepare_events_for_prophet(min_date, max_date, periods)
-                    prophet_df = self.prophet_model.add_events_features(prophet_df, events_df)
-                
-                # Add weather data if requested
-                if include_weather:
-                    data_logger.info(f"Adding weather data to forecast")
-                    weather_df = self.weather_service.prepare_weather_for_prophet(min_date, max_date, periods)
-                    prophet_df = self.prophet_model.add_weather_features(prophet_df, weather_df)
-                
-                # Add time-based features if requested
-                if include_time_features:
-                    data_logger.info(f"Adding time-based features to forecast")
-                    prophet_df = self.prophet_model.add_time_features(prophet_df)
-            
-                # Save prophet dataframe for reference and transparency
-                self._save_prophet_data(company, "product", product, prophet_df)
 
-                try:
-                    # Generate forecast
-                    forecast = self.prophet_model.generate_forecast(
-                        model_id,
-                        prophet_df,
-                        periods,
-                        include_weather,
-                        include_events,
-                        include_time_features,
-                        force_retrain,
-                        perform_cv=True,
-                        cv_params=None,
-                        tune_hyperparams=True,
-                        param_grid=None,
-                    )
-                except:
-                    forecast = self.prophet_model.generate_forecast(
-                        model_id,
-                        prophet_df,
-                        periods,
-                        include_weather,
-                        include_events,
-                        include_time_features,
-                        force_retrain,
-                    )
+            # Fill the extra ds values in prophet_df, dont fill y values, only ds
+            new_max_date = pd.to_datetime(max_date) + pd.Timedelta(days=periods)
+            prophet_df = self.fill_extra_ds_values(prophet_df, max_date, new_max_date)
+
+
+            # Add weather data if requested
+            if include_weather:
+                data_logger.info(f"Adding weather data to forecast")
+                weather_df = self.weather_service.prepare_weather_for_prophet(min_date, max_date, periods)
+                prophet_df = self.prophet_model.add_weather_features(prophet_df, weather_df)
+                
+                # Save prophet data with weather for debugging
+                if not self.use_s3:
+                    prophet_df.to_csv("debug/prophet_df_with_weather_product.csv", index=False)
+
+            # Add events data if requested
+            if include_events:
+                data_logger.info(f"Adding events data to forecast")
+                events_df = self.events_service.prepare_events_for_prophet(min_date, max_date, periods)
+                prophet_df = self.prophet_model.add_events_features(prophet_df, events_df)
+                
+                # Save prophet data with events for debugging
+                if not self.use_s3:
+                    prophet_df.to_csv("debug/prophet_df_with_events_product.csv", index=False)
+
+            # Add time-based features if requested
+            if include_time_features:
+                data_logger.info(f"Adding time-based features to forecast")
+                prophet_df = self.prophet_model.add_time_features(prophet_df)
+            
+            # Save prophet data with time features for debugging
+                if not self.use_s3:
+                    prophet_df.to_csv("debug/prophet_df_with_time_features_product.csv", index=False)
+            
+            # Save prophet dataframe for reference and transparency
+            self._save_prophet_data(company, "product", product, prophet_df)
+
+            try:
+                # Generate forecast
+                forecast = self.prophet_model.generate_forecast(
+                    model_id,
+                    prophet_df,
+                    periods,
+                    include_weather,
+                    include_events,
+                    include_time_features,
+                    force_retrain,
+                    perform_cv=True,
+                    cv_params=None,
+                    tune_hyperparams=True,
+                    param_grid=None,
+
+                )
+            except:
+                forecast = self.prophet_model.generate_forecast(
+                    model_id,
+                    prophet_df,
+                    periods,
+                    include_weather,
+                    include_events,
+                    include_time_features,
+                    force_retrain,
+                )
+
             
             # Add metadata
             forecast["metadata"] = {
                 "company": company,
                 "product": product,
                 "target": "quantity",
-                "model_type": model_type,
                 "generated_at": datetime.now().isoformat(),
                 "periods": periods,
                 "include_weather": include_weather,
@@ -868,19 +699,10 @@ class ForecastService:
                 }
             }
             
-            # Add TimeGPT-specific metadata if applicable
-            if model_type == "timegpt":
-                forecast["metadata"]["timegpt_params"] = {
-                    "finetune": finetune,
-                    "finetune_steps": finetune_steps,
-                    "finetune_loss": finetune_loss,
-                    "finetune_depth": finetune_depth,
-                }
-            
             # Save forecast data
             self._save_forecast_data(model_id, forecast)
             
-            data_logger.info(f"Generated sales forecast for company: {company}, product: {product} using {model_type} model")
+            data_logger.info(f"Generated sales forecast for company: {company}, product: {product}")
             return forecast
             
         except Exception as e:
@@ -971,6 +793,7 @@ class ForecastService:
             data_logger.error(traceback.format_exc())
             return []
     
+
     def get_products(self, company: str, category: Optional[str] = None) -> List[str]:
         """
         Get list of available products
@@ -985,6 +808,8 @@ class ForecastService:
         try:
             # Load processed data
             processed_data = self.processor.load_processed_data(company)
+
+            print(processed_data)
             
             if not processed_data or "product_sales" not in processed_data:
                 data_logger.error(f"No product sales data available for company: {company}")
@@ -1035,19 +860,6 @@ class ForecastService:
             data_logger.error(traceback.format_exc())
             return []
     
-    def get_available_model_types(self) -> List[str]:
-        """
-        Get list of available model types
-        
-        Returns:
-            List of available model types
-        """
-        available_models = ["prophet"]
-        
-        if self.timegpt_model is not None:
-            available_models.append("timegpt")
-            
-        return available_models
 
 def test_forecast_service():
     """Test the ForecastService functionality"""
@@ -1060,9 +872,6 @@ def test_forecast_service():
     # Test for Forge
     company = "forge"
     
-    # Print available models
-    print(f"Available models: {service.get_available_model_types()}")
-    
     # Load raw data if processed data doesn't exist
     processed_data = service.processor.load_processed_data(company)
     if not processed_data:
@@ -1070,15 +879,14 @@ def test_forecast_service():
         raw_data = loader.load_company_data(company)
         processed_data = service.processor.process_company_data(company, raw_data)
     
-    # Generate revenue forecast with Prophet
-    print("\n=== Testing Prophet Revenue Forecast ===")
+    # Generate revenue forecast
+    print("\n=== Testing Revenue Forecast ===")
     revenue_forecast = service.forecast_company_revenue(
         company, 
         periods=5,
         include_weather=True,
         include_events=True,
-        include_time_features=True,
-        model_type="prophet"
+        include_time_features=True
     )
     
     print(f"Revenue forecast success: {revenue_forecast['success']}")
@@ -1086,24 +894,6 @@ def test_forecast_service():
         print(f"Forecast periods: {len(revenue_forecast['dates']) - len(revenue_forecast['actuals'])}")
         if revenue_forecast['metrics']['mape'] is not None:
             print(f"MAPE: {revenue_forecast['metrics']['mape']:.2f}%")
-    
-    # Test TimeGPT if available
-    if "timegpt" in service.get_available_model_types():
-        print("\n=== Testing TimeGPT Revenue Forecast ===")
-        timegpt_forecast = service.forecast_company_revenue(
-            company, 
-            periods=5,
-            include_weather=True,
-            include_events=True,
-            include_time_features=True,
-            model_type="timegpt"
-        )
-        
-        print(f"TimeGPT forecast success: {timegpt_forecast['success']}")
-        if timegpt_forecast["success"]:
-            print(f"Forecast periods: {len(timegpt_forecast['dates']) - len(timegpt_forecast['actuals'])}")
-            if timegpt_forecast['metrics']['mape'] is not None:
-                print(f"MAPE: {timegpt_forecast['metrics']['mape']:.2f}%")
     
     # Test force retrain
     print("\n=== Testing Force Retrain ===")

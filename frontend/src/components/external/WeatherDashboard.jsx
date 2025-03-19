@@ -422,7 +422,10 @@ const WeatherDashboard = () => {
                     dataKey="max" 
                     name="Max Temp" 
                     stroke="#f59e0b" 
-                    activeDot={(props) => <circle {...props} r={8} />}
+                    activeDot={(props) => {
+                      const { dataKey, key, ...restProps } = props;
+                      return <circle key={key} {...restProps} r={8} />;
+                    }}
                     strokeWidth={2}
                   />
                   <Line 
@@ -431,7 +434,10 @@ const WeatherDashboard = () => {
                     dataKey="avg" 
                     name="Avg Temp" 
                     stroke="#3b82f6" 
-                    dot={(props) => <circle {...props} r={0} />}
+                    dot={(props) => {
+                      const { dataKey, key, ...restProps } = props;
+                      return <circle key={key} {...restProps} r={0} />;
+                    }}
                     strokeWidth={2}
                   />
                   <Line 
@@ -440,7 +446,10 @@ const WeatherDashboard = () => {
                     dataKey="min" 
                     name="Min Temp" 
                     stroke="#2dd4bf" 
-                    activeDot={(props) => <circle {...props} r={8} />}
+                    activeDot={(props) => {
+                      const { dataKey, key, ...restProps } = props;
+                      return <circle key={key} {...restProps} r={8} />;
+                    }}
                     strokeWidth={2}
                   />
                 </LineChart>
@@ -480,6 +489,7 @@ const WeatherDashboard = () => {
             </div>
           </div>
           
+          {/*
           <div className="mt-6 bg-gray-50 p-4 rounded-md border border-gray-200">
             <h4 className="text-sm font-medium text-gray-900 mb-1">Weather Impact on Forecast Models</h4>
             <p className="text-sm text-gray-700">
@@ -488,6 +498,7 @@ const WeatherDashboard = () => {
               different product categories.
             </p>
           </div>
+          */}
         </div>
       )}
     </div>

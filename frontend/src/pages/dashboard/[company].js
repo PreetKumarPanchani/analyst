@@ -2,8 +2,6 @@ import { useRouter } from 'next/router';
 import { useEffect } from 'react';
 import AppLayout from '../../components/layout/AppLayout';
 import SalesForecastDashboard from '../../components/dashboard/SalesForecastDashboard';
-import ForecastInsights from '../../components/dashboard/ForecastInsights';
-import WeatherDashboard from '../../components/external/WeatherDashboard';
 import ErrorDisplay from '../../components/common/ErrorDisplay';
 
 const DashboardPage = () => {
@@ -34,6 +32,7 @@ const DashboardPage = () => {
     );
   }
 
+
   return (
     <AppLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -41,17 +40,10 @@ const DashboardPage = () => {
           <SalesForecastDashboard selectedCompany={company} />
         </div>
         
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2">
-            <ForecastInsights company={company} />
-          </div>
-          <div>
-            <WeatherDashboard />
-          </div>
-        </div>
       </div>
     </AppLayout>
   );
+
 };
 
 export default DashboardPage;

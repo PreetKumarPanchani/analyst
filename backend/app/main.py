@@ -10,6 +10,7 @@ from app.core.config import settings
 from app.core.logger import logger, api_logger
 from app.data.loader import DataLoader
 from app.data.processor import DataProcessor
+from app.services.s3_service import S3Service
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -56,6 +57,7 @@ async def log_requests(request, call_next):
         api_logger.error(traceback.format_exc())
         raise
 
+
 @app.on_event("startup")
 async def startup_event():
     """Startup event handler"""
@@ -90,6 +92,55 @@ async def startup_event():
     except Exception as e:
         logger.error(f"Error during startup: {str(e)}")
         logger.error(traceback.format_exc())
+
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialize services on startup"""
+    try:
+        # Create required directories
+        settings.create_directories()
+        
+        # Initialize S3 service
+        s3_service = S3Service()
+        if settings.USE_S3_STORAGE:
+            api_logger.info(f"Initialized S3 storage with bucket: {settings.AWS_S3_BUCKET_NAME}")
+        else:
+            api_logger.info("Using local file storage (S3 storage disabled)")
+        
+        # Initialize data processor with test data
+        api_logger.info("Testing data processing pipeline...")
+        try:
+            loader = DataLoader()
+            processor = DataProcessor()
+            
+            # Process data for both companies
+            for company in ["forge", "cpl"]:
+                # Check if processed data already exists
+                processed_data = processor.load_processed_data(company)
+                
+                if not processed_data:
+                    logger.info(f"No processed data found for {company}. Processing raw data...")
+                    
+                    # Load raw data
+                    raw_data = loader.load_company_data(company)
+                    
+                    if raw_data:
+                        # Process data
+                        processor.process_company_data(company, raw_data)
+                        logger.info(f"Successfully processed data for {company}")
+                    else:
+                        logger.warning(f"No raw data found for {company}")
+        
+        except Exception as e:
+            api_logger.error(f"Data processor test failed: {str(e)}")
+        
+        # Log startup
+        api_logger.info("Application started successfully")
+        
+    except Exception as e:
+        api_logger.error(f"Startup error: {str(e)}")
+        api_logger.error(traceback.format_exc())
 
 @app.on_event("shutdown")
 async def shutdown_event():

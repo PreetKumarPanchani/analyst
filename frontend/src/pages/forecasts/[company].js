@@ -122,6 +122,8 @@ const ForecastsPage = () => {
       date,
       actual: revenueForecasts.actuals[index] || null,
       predicted: revenueForecasts.predictions[index],
+      upperBound: revenueForecasts.upper_bound?.[index] || null,
+      lowerBound: revenueForecasts.lower_bound?.[index] || null,
       isForecasted: index >= forecastStartIndex
     }));
   };
@@ -305,8 +307,18 @@ const ForecastsPage = () => {
                   dataKey="actual" 
                   stroke="#3b82f6" 
                   strokeWidth={2} 
-                  dot={(props) => <circle {...props} r={3} />}
-                  activeDot={(props) => <circle {...props} r={6} />}
+                  dot={(props) => {
+                    if (props && props.payload && props.payload.actual !== null) {
+                      const { dataKey, key, ...restProps } = props;
+                      return <circle key={key} {...restProps} r={3} />;
+                    } else {
+                      return null;
+                    }
+                  }}
+                  activeDot={(props) => {
+                    const { dataKey, key, ...restProps } = props;
+                    return <circle key={key} {...restProps} r={6} />;
+                  }}
                   name="Actual Revenue"
                   isAnimationActive={false}
                 />
@@ -316,21 +328,46 @@ const ForecastsPage = () => {
                   stroke="#10b981" 
                   strokeWidth={2}
                   name="Forecast" 
-                  //dot={function(entry) {
-                  //  return entry && entry.payload && entry.payload.isForecasted ? { r: 3 } : { r: 0 };
-                  //}}
-          
                   dot={(props) => {
-                    if (props && props.payload && props.payload.isForecasted) {
-                      return <circle {...props} r={3} />;
+                    const chartData = prepareRevenueChartData();
+                    const index = chartData.indexOf(props.payload);
+                    const forecastStartIndex = revenueForecasts?.actuals.findLastIndex(val => val !== null) + 1;
+                    
+                    if (index >= forecastStartIndex) {
+                      const { dataKey, key, ...restProps } = props;
+                      return <circle key={key} {...restProps} r={3} />;
                     } else {
-                      return null; // Hide dot completely for non-forecasted points
+                      return null;
                     }
                   }}
                   strokeDasharray={function(entry) {
                     return entry && entry.payload && entry.payload.isForecasted ? "5 5" : "0";
                   }}
                   isAnimationActive={false}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="upperBound" 
+                  stroke="#d1d5db" 
+                  strokeWidth={1}
+                  name="Upper Bound"
+                  dot={false}
+                  // Only display for forecasted period
+                  connectNulls={true}
+                  hide={revenueForecasts?.upper_bound === undefined}
+                  strokeDasharray="3 3"
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="lowerBound" 
+                  stroke="#d1d5db" 
+                  strokeWidth={1}
+                  name="Lower Bound"
+                  dot={false}
+                  // Only display for forecasted period
+                  connectNulls={true}
+                  hide={revenueForecasts?.lower_bound === undefined}
+                  strokeDasharray="3 3"
                 />
               </LineChart>
             </ResponsiveContainer>

@@ -96,7 +96,7 @@ export const salesApi = {
  */
 export const forecastApi = {
   getRevenueForecasts: (company, options = {}) => {
-    const { periods = 30, includeWeather = true, includeEvents = true, forceRetrain = false } = options;
+    const { periods = 15, includeWeather = true, includeEvents = true, forceRetrain = false } = options;
     
     const url = `/forecasts/revenue/${company}?periods=${periods}` +
       `&include_weather=${includeWeather}` +
@@ -107,7 +107,7 @@ export const forecastApi = {
   },
   
   getCategoryForecast: (company, category, options = {}) => {
-    const { periods = 30, includeWeather = true, includeEvents = true, forceRetrain = false } = options;
+    const { periods = 15, includeWeather = true, includeEvents = true, forceRetrain = false } = options;
     
     const url = `/forecasts/category/${company}/${encodeURIComponent(category)}?periods=${periods}` +
       `&include_weather=${includeWeather}` +
@@ -118,7 +118,7 @@ export const forecastApi = {
   },
   
   getProductForecast: (company, product, options = {}) => {
-    const { periods = 30, includeWeather = true, includeEvents = true, forceRetrain = false } = options;
+    const { periods = 15, includeWeather = true, includeEvents = true, forceRetrain = false } = options;
     
     const url = `/forecasts/product/${company}/${encodeURIComponent(product)}?periods=${periods}` +
       `&include_weather=${includeWeather}` +
@@ -128,7 +128,6 @@ export const forecastApi = {
     return apiRequest(url);
   },
   
-  getInsights: (company) => apiRequest(`/forecasts/insights/${company}`),
 };
 
 /**

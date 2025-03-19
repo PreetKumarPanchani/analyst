@@ -197,13 +197,16 @@ const ProductForecastView = ({ company = 'forge', initialProduct = null }) => {
                   </>
                 )}
               </button>
-              <button
+              
+              {/* <button
                 className="flex items-center px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
               >
                 <DownloadCloud className="w-4 h-4 mr-2" />
                 Export
               </button>
+              */}
             </div>
+
           </div>
         </div>
 
@@ -278,8 +281,14 @@ const ProductForecastView = ({ company = 'forge', initialProduct = null }) => {
                     dataKey="actual" 
                     stroke="#3b82f6" 
                     strokeWidth={2} 
-                    dot={(props) => <circle {...props} r={3} />}
-                    activeDot={(props) => <circle {...props} r={6} />}
+                    dot={(props) => {
+                      const { dataKey, key, ...restProps } = props;
+                      return <circle key={key} {...restProps} r={3} />;
+                    }}
+                    activeDot={(props) => {
+                      const { dataKey, key, ...restProps } = props;
+                      return <circle key={key} {...restProps} r={6} />;
+                    }}
                     name="Actual"
                   />
                   <Line 
@@ -306,7 +315,8 @@ const ProductForecastView = ({ company = 'forge', initialProduct = null }) => {
                         return null; // Don't render dots for historical fitted values
                       } else {
                         // Render dots only for forecast period
-                        return <circle {...props} r={3} />;
+                        const { dataKey, key, ...restProps } = props;
+                        return <circle key={key} {...restProps} r={3} />;
                       }
                     }}
                     
@@ -333,7 +343,8 @@ const ProductForecastView = ({ company = 'forge', initialProduct = null }) => {
             </div>
           </div>
           
-          {/* Components Chart (if available) */}
+          {/* Components Chart (if available),  comment it out for now  */}
+          {/*
           {forecast && forecast.components && (
             <div className="bg-white p-6 rounded-lg shadow">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Forecast Components</h2>
@@ -393,6 +404,7 @@ const ProductForecastView = ({ company = 'forge', initialProduct = null }) => {
               </div>
             </div>
           )}
+          */}
         </div>
       </main>
     </div>

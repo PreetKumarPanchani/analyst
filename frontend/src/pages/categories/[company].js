@@ -164,9 +164,9 @@ const CategoryPage = () => {
           </div>
         </div>
         
-        {/* Selected category info */}
+        {/* Selected category info , do proper alignment for these two cards*/}
         {selectedCategory && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
             {/* Category forecast card */}
             <div className="bg-white shadow rounded-lg">
               <div className="p-6 border-b border-gray-200">
@@ -203,6 +203,7 @@ const CategoryPage = () => {
               </div>
             </div>
             
+
             {/* Products in category card */}
             <div className="bg-white shadow rounded-lg">
               <div className="p-6 border-b border-gray-200">
@@ -239,8 +240,8 @@ const CategoryPage = () => {
                 )}
               </div>
             </div>
-            
             {/* Sales trend card */}
+            {/*
             <div className="bg-white shadow rounded-lg">
               <div className="p-6 border-b border-gray-200">
                 <h2 className="text-lg font-medium text-gray-900 mb-2">
@@ -267,8 +268,10 @@ const CategoryPage = () => {
                     )}
                   </div>
                 )}
+
               </div>
             </div>
+            */} 
           </div>
         )}
         
