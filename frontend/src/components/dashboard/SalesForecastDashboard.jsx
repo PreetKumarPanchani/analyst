@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Line, Bar, ResponsiveContainer, LineChart, BarChart, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import { CalendarDays, TrendingUp, Package, Store, Layers, AlertTriangle, Activity, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { fetchApi } from '../../utils/apiConfig';
+import Link from 'next/link';
 
 // Main Dashboard Component
 const SalesForecastDashboard = () => {
@@ -16,19 +18,13 @@ const SalesForecastDashboard = () => {
       setLoading(true);
       try {
         // Fetch revenue forecast
-        const forecastRes = await fetch(`/api/v1/forecasts/revenue/${selectedCompany}`);
-        if (!forecastRes.ok) throw new Error(`Failed to fetch forecast: ${forecastRes.status}`);
-        const forecastResult = await forecastRes.json();
+        const forecastResult = await fetchApi(`/api/v1/forecasts/revenue/${selectedCompany}`);
         
         // Fetch top products
-        const productsRes = await fetch(`/api/v1/sales/top-products/${selectedCompany}`);
-        if (!productsRes.ok) throw new Error(`Failed to fetch products: ${productsRes.status}`);
-        const productsResult = await productsRes.json();
+        const productsResult = await fetchApi(`/api/v1/sales/top-products/${selectedCompany}`);
         
         // Fetch categories
-        const categoriesRes = await fetch(`/api/v1/sales/categories/${selectedCompany}`);
-        if (!categoriesRes.ok) throw new Error(`Failed to fetch categories: ${categoriesRes.status}`);
-        const categoriesResult = await categoriesRes.json();
+        const categoriesResult = await fetchApi(`/api/v1/sales/categories/${selectedCompany}`);
         
         setForecastData(forecastResult);
         setTopProducts(productsResult);
@@ -294,9 +290,9 @@ const SalesForecastDashboard = () => {
               </ResponsiveContainer>
             </div>
             <div className="mt-4">
-              <a href={`/products/${selectedCompany}`} className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+              <Link href={`/products/${selectedCompany}`} className="text-blue-600 hover:text-blue-800 text-sm font-medium">
                 View all products →
-              </a>
+              </Link>
             </div>
           </div>
           
@@ -318,9 +314,9 @@ const SalesForecastDashboard = () => {
               <p className="text-gray-500">No categories available</p>
             )}
             <div className="mt-4">
-              <a href={`/categories/${selectedCompany}`} className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+              <Link href={`/categories/${selectedCompany}`} className="text-blue-600 hover:text-blue-800 text-sm font-medium">
                 View all categories →
-              </a>
+              </Link>
             </div>
           </div>
         </div>

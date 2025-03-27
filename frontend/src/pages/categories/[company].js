@@ -6,6 +6,7 @@ import LoadingSpinner from '../../components/common/LoadingSpinner';
 import ErrorDisplay from '../../components/common/ErrorDisplay';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Calendar, TrendingUp, Package, ArrowRight } from 'lucide-react';
+import { fetchApi } from '../../utils/apiConfig';
 
 const CategoryPage = () => {
   const router = useRouter();
@@ -30,10 +31,8 @@ const CategoryPage = () => {
     const fetchCategories = async () => {
       try {
         setLoading(true);
-        const res = await fetch(`/api/v1/sales/categories/${company}`);
-        if (!res.ok) throw new Error(`Failed to fetch categories: ${res.status}`);
         
-        const data = await res.json();
+        const data = await fetchApi(`/api/v1/sales/categories/${company}`);
         setCategories(data);
         
         // Select first category by default
@@ -59,17 +58,11 @@ const CategoryPage = () => {
       setLoadingForecast(true);
       try {
         // Fetch forecast for selected category
-        const forecastRes = await fetch(`/api/v1/forecasts/category/${company}/${encodeURIComponent(selectedCategory)}`);
-        if (!forecastRes.ok) throw new Error(`Failed to fetch category forecast: ${forecastRes.status}`);
-        
-        const forecastData = await forecastRes.json();
+        const forecastData = await fetchApi(`/api/v1/forecasts/category/${company}/${encodeURIComponent(selectedCategory)}`);
         setCategoryForecast(forecastData);
         
         // Fetch products for selected category
-        const productsRes = await fetch(`/api/v1/sales/products/${company}?category=${encodeURIComponent(selectedCategory)}`);
-        if (!productsRes.ok) throw new Error(`Failed to fetch products: ${productsRes.status}`);
-        
-        const productsData = await productsRes.json();
+        const productsData = await fetchApi(`/api/v1/sales/products/${company}?category=${encodeURIComponent(selectedCategory)}`);
         setProducts(productsData);
       } catch (err) {
         console.error("Error fetching category data:", err);

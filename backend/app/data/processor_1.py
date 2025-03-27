@@ -1,4 +1,3 @@
-# app/data/processor.py
 import os
 import pandas as pd
 import numpy as np
@@ -15,8 +14,6 @@ from app.core.logger import data_logger
 from app.core.config import settings
 from app.services.s3_service import S3Service
 
-
-
 class DataProcessor:
     """
     Service for processing sales data for analysis and forecasting
@@ -24,16 +21,14 @@ class DataProcessor:
     
     def __init__(self, processed_dir: str = "data/processed"):
         """Initialize the data processor"""
-        self.processed_dir = settings.PROCESSED_DATA_DIR
+        self.processed_dir = "data/new_processed"
         self.s3_service = S3Service()
         self.use_s3 = settings.USE_S3_STORAGE
         
         if not self.use_s3:
-            self.processed_dir = settings.PROCESSED_DATA_DIR
-            # Create the processed directory if it doesn't exist
             os.makedirs(self.processed_dir, exist_ok=True)
             
-            data_logger.info(f"DataProcessor initialized with output directory: {processed_dir}")
+        data_logger.info(f"DataProcessor initialized with output directory: {processed_dir}")
     
     def process_company_data(self, company: str, data: Dict[str, pd.DataFrame]) -> Dict[str, pd.DataFrame]:
         """
@@ -53,7 +48,9 @@ class DataProcessor:
             
             # Process daily sales
             result["daily_sales"] = self._process_daily_sales(company, data["sales"])
-            
+        
+            result["daily_salesssss"] = self._process_daily_sales1(company, data["sales"])
+
             # Process sales by category
             result["category_sales"] = self._process_category_sales(company, data["sales_items"])
             
@@ -63,7 +60,6 @@ class DataProcessor:
             # Process payment methods
             result["payment_methods"] = self._process_payment_methods(company, data["sales_payments"])
             
-
             # To generate the product-category mapping
             self.generate_product_category_mapping(company, data["sales_items"])
             
@@ -90,17 +86,27 @@ class DataProcessor:
             Processed daily sales DataFrame
         """
         try:
-            # Sale Date is YYYY-MM-DD
+            # Make a copy to avoid modifying the original
+            df = sales_df.copy()
+            
             # Convert sale date to datetime
-            sales_df["Sale Date"] = pd.to_datetime(sales_df["Sale Date"])
-
+            df["Sale Date"] = pd.to_datetime(df["Sale Date"])
+            
+            # Filter out VOIDED transactions
+            #df = df[df["Order Status"] != "VOIDED"]
+            
+            # Handle missing values
+            df["Total"] = df["Total"].fillna(0)
+            df["Quantity"] = df["Quantity"].fillna(0)
+            
             # Group by date and compute daily metrics
-            daily_sales = sales_df.groupby(sales_df["Sale Date"].dt.date).agg({
-                #"Sale ID": "count",
-                "Sale ID": "nunique",
-                "Total": "sum",
-                "Quantity": "sum"
+            daily_sales = df.groupby(df["Sale Date"].dt.date).agg({
+                "Sale ID": "nunique",  # Count unique transactions per day
+                "Total": "sum",        # Sum of all totals
+                "Quantity": "sum"      # Sum of all quantities
             }).reset_index()
+
+
             
             # Rename columns
             daily_sales.columns = ["date", "transaction_count", "total_revenue", "total_quantity"]
@@ -125,6 +131,63 @@ class DataProcessor:
             data_logger.error(traceback.format_exc())
             return pd.DataFrame()
     
+
+    def _process_daily_sales1(self, company: str, sales_df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Process daily sales data
+        
+        Args:
+            company: Company name
+            sales_df: Sales DataFrame
+            
+        Returns:
+            Processed daily sales DataFrame
+        """
+        try:
+            # Make a copy to avoid modifying the original
+            df = sales_df.copy()
+            
+            # Convert sale date to datetime
+            df["Sale Date"] = pd.to_datetime(df["Sale Date"])
+            
+            # Filter out VOIDED transactions
+            #df = df[df["Order Status"] != "VOIDED"]
+            
+            # Handle missing values
+            df["Total"] = df["Total"].fillna(0)
+            df["Quantity"] = df["Quantity"].fillna(0)
+            
+            # Group by date and compute daily metrics
+            daily_sales = df.groupby(df["Sale Date"].dt.date).agg({
+                "Sale ID": "nunique",  # Count unique transactions per day
+            }).reset_index()
+
+
+            
+            # Rename columns
+            daily_sales.columns = ["date", "transaction_count"]
+            
+            # Add company column
+            daily_sales["company"] = company
+            
+            # Ensure date is datetime
+            daily_sales["date"] = pd.to_datetime(daily_sales["date"])
+            
+            # Add derived time features
+            daily_sales['dayofweek'] = daily_sales['date'].dt.dayofweek
+            daily_sales['month'] = daily_sales['date'].dt.month
+            daily_sales['year'] = daily_sales['date'].dt.year
+            daily_sales['is_weekend'] = (daily_sales['dayofweek'] >= 5).astype(int)
+            
+            data_logger.info(f"Processed daily sales for {company}: {len(daily_sales)} rows")
+            return daily_sales
+            
+        except Exception as e:
+            data_logger.error(f"Error processing daily sales: {str(e)}")
+            data_logger.error(traceback.format_exc())
+            return pd.DataFrame()
+    
+
     def _process_category_sales(self, company: str, sales_items_df: pd.DataFrame) -> pd.DataFrame:
         """
         Process sales by category
@@ -137,15 +200,22 @@ class DataProcessor:
             Processed category sales DataFrame
         """
         try:
+            # Make a copy to avoid modifying the original
+            df = sales_items_df.copy()
+            
             # Convert sale date to datetime
-            sales_items_df["Sale Date"] = pd.to_datetime(sales_items_df["Sale Date"])
-
-            # Process the category name to remove - and take the first part  also remove any spaces in the start and end of the string
-            sales_items_df["Category"] = sales_items_df["Category"].str.split("-").str[0].str.strip()
-
+            df["Sale Date"] = pd.to_datetime(df["Sale Date"])
+            
+            # Filter out VOIDED transactions
+            #df = df[df["Order Status"] != "VOIDED"]
+            
+            # Handle missing values
+            df["Total"] = df["Total"].fillna(0)
+            df["Quantity"] = df["Quantity"].fillna(0)
+            
             # Group by date and category
-            category_sales = sales_items_df.groupby([
-                sales_items_df["Sale Date"].dt.date,
+            category_sales = df.groupby([
+                df["Sale Date"].dt.date,
                 "Category"
             ]).agg({
                 "Total": "sum",
@@ -175,7 +245,6 @@ class DataProcessor:
             data_logger.error(traceback.format_exc())
             return pd.DataFrame()
     
-        
     def generate_product_category_mapping(self, company: str, sales_items_df: pd.DataFrame) -> pd.DataFrame:
         """
         Generate a mapping between products and their categories
@@ -188,8 +257,11 @@ class DataProcessor:
             DataFrame with product-category mapping
         """
         try:
+            # Make a copy to avoid modifying the original
+            df = sales_items_df.copy()
+            
             # Get unique product-category pairs
-            product_category = sales_items_df[["Product Name", "Category"]].drop_duplicates()
+            product_category = df[["Product Name", "Category"]].drop_duplicates()
             
             # Rename columns
             product_category.columns = ["product", "category"]
@@ -229,16 +301,22 @@ class DataProcessor:
             Processed product sales DataFrame
         """
         try:
-
-            # Convert sale date to datetime
-            sales_items_df["Sale Date"] = pd.to_datetime(sales_items_df["Sale Date"])
+            # Make a copy to avoid modifying the original
+            df = sales_items_df.copy()
             
-            # Process the product name to remove - and take the first part  also remove any spaces in the start and end of the string
-            sales_items_df["Product Name"] = sales_items_df["Product Name"].str.split("-").str[0].str.strip()
+            # Convert sale date to datetime
+            df["Sale Date"] = pd.to_datetime(df["Sale Date"])
+            
+            # Filter out VOIDED transactions
+            #df = df[df["Order Status"] != "VOIDED"]
+            
+            # Handle missing values
+            df["Total"] = df["Total"].fillna(0)
+            df["Quantity"] = df["Quantity"].fillna(0)
             
             # Group by date and product
-            product_sales = sales_items_df.groupby([
-                sales_items_df["Sale Date"].dt.date,
+            product_sales = df.groupby([
+                df["Sale Date"].dt.date,
                 "Product Name"
             ]).agg({
                 "Total": "sum",
@@ -280,12 +358,15 @@ class DataProcessor:
             Processed payment methods DataFrame
         """
         try:
+            # Make a copy to avoid modifying the original
+            df = sales_payments_df.copy()
+            
             # Convert payment date to datetime
-            sales_payments_df["Payment Date"] = pd.to_datetime(sales_payments_df["Payment Date"])
+            df["Payment Date"] = pd.to_datetime(df["Payment Date"])
             
             # Group by date and payment method
-            payment_methods = sales_payments_df.groupby([
-                pd.to_datetime(sales_payments_df["Payment Date"]).dt.date,
+            payment_methods = df.groupby([
+                pd.to_datetime(df["Payment Date"]).dt.date,
                 "Payment Method"
             ]).agg({
                 "Payment Amount": "sum",
@@ -358,24 +439,9 @@ class DataProcessor:
             result = {}
             
             if self.use_s3:
-
-                ## If company directry exists and no files in it then return processed data
-                if not self.s3_service.list_objects(f"{settings.S3_PROCESSED_PREFIX}{company}") or len(self.s3_service.list_objects(f"{settings.S3_PROCESSED_PREFIX}{company}")) < 3:
-
-
-                    data_logger.info(f"No processed data directory for company: {company}")
-                    # load the raw data
-                    from app.data.loader import DataLoader
-                    loader = DataLoader()
-                    raw_data = loader.load_company_data(company)
-                    # process the data
-                    processed_data = self.process_company_data(company, raw_data)
-
                 # Load from S3
                 prefix = f"{settings.S3_PROCESSED_PREFIX}{company}/"
                 files = self.s3_service.list_objects(prefix)
-
-
                 
                 for s3_key in files:
                     if s3_key.endswith(".csv"):
@@ -398,18 +464,10 @@ class DataProcessor:
                 # Load from local filesystem
                 company_dir = os.path.join(self.processed_dir, company)
                 
-                ## If company directry exists and no files in it then return empty dictionary
-                if not os.path.exists(company_dir) or not os.listdir(company_dir) or len(os.listdir(company_dir)) < 3:
+                if not os.path.exists(company_dir):
                     data_logger.warning(f"No processed data directory for company: {company}")
-                    
-                    # process the data
-                    from app.data.loader import DataLoader
-                    loader = DataLoader()
-                    raw_data = loader.load_company_data(company)
-                    
-                    processed_data = self.process_company_data(company, raw_data)
-
-
+                    return {}
+                
                 for file_name in os.listdir(company_dir):
                     if file_name.endswith(".csv"):
                         key = file_name.split(".")[0]
@@ -434,6 +492,7 @@ class DataProcessor:
             data_logger.error(f"Error loading processed data: {str(e)}")
             data_logger.error(traceback.format_exc())
             return {}
+    
 
 def test_data_processor():
     """Test the DataProcessor functionality"""

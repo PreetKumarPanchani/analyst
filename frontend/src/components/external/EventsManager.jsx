@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, Plus, Edit, Trash2, X, Check, AlertTriangle } from 'lucide-react';
+import { fetchApi } from '../../utils/apiConfig';
 
 const EventsManager = () => {
   const [events, setEvents] = useState([]);
@@ -33,10 +34,7 @@ const EventsManager = () => {
       const startDate = today.toISOString().split('T')[0];
       const endDate = threeMonthsLater.toISOString().split('T')[0];
       
-      const res = await fetch(`/api/v1/external/events?start_date=${startDate}&end_date=${endDate}`);
-      if (!res.ok) throw new Error(`Failed to fetch events: ${res.status}`);
-      
-      const data = await res.json();
+      const data = await fetchApi(`/api/v1/external/events?start_date=${startDate}&end_date=${endDate}`);
       setEvents(data);
     } catch (err) {
       console.error("Error fetching events:", err);
@@ -74,15 +72,13 @@ const EventsManager = () => {
         impact: formData.impact,
       };
       
-      const res = await fetch('/api/v1/external/events', {
+      await fetchApi('/api/v1/external/events', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(payload),
       });
-      
-      if (!res.ok) throw new Error(`Failed to add event: ${res.status}`);
       
       // Refresh events list
       await fetchEvents();
@@ -108,15 +104,13 @@ const EventsManager = () => {
         impact: formData.impact,
       };
       
-      const res = await fetch(`/api/v1/external/events/${editingEvent.name}?event_date=${editingEvent.date}`, {
+      await fetchApi(`/api/v1/external/events/${editingEvent.name}?event_date=${editingEvent.date}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(payload),
       });
-      
-      if (!res.ok) throw new Error(`Failed to update event: ${res.status}`);
       
       // Refresh events list
       await fetchEvents();
@@ -136,11 +130,9 @@ const EventsManager = () => {
     }
     
     try {
-      const res = await fetch(`/api/v1/external/events/${event.name}?event_date=${event.date}`, {
+      await fetchApi(`/api/v1/external/events/${event.name}?event_date=${event.date}`, {
         method: 'DELETE',
       });
-      
-      if (!res.ok) throw new Error(`Failed to delete event: ${res.status}`);
       
       // Refresh events list
       await fetchEvents();

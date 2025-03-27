@@ -5,7 +5,7 @@ import uvicorn
 import time
 import traceback
 
-from app.api.routes import sales, forecasts, events
+from app.api.routes import sales, forecasts, events, uploads
 from app.core.config import settings
 from app.core.logger import logger, api_logger
 from app.data.loader import DataLoader
@@ -32,6 +32,7 @@ app.add_middleware(
 app.include_router(sales.router, prefix=f"{settings.API_V1_STR}/sales", tags=["sales"])
 app.include_router(forecasts.router, prefix=f"{settings.API_V1_STR}/forecasts", tags=["forecasts"])
 app.include_router(events.router, prefix=f"{settings.API_V1_STR}/external", tags=["external"])
+app.include_router(uploads.router, prefix=f"{settings.API_V1_STR}/uploads", tags=["uploads"])
 
 @app.middleware("http")
 async def log_requests(request, call_next):
@@ -57,7 +58,7 @@ async def log_requests(request, call_next):
         api_logger.error(traceback.format_exc())
         raise
 
-
+'''
 @app.on_event("startup")
 async def startup_event():
     """Startup event handler"""
@@ -93,6 +94,8 @@ async def startup_event():
         logger.error(f"Error during startup: {str(e)}")
         logger.error(traceback.format_exc())
 
+
+'''
 
 @app.on_event("startup")
 async def startup_event():

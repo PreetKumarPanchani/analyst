@@ -13,7 +13,8 @@ import {
   Home,
   LogOut,
   Calendar,
-  Cloud
+  Cloud,
+  Upload,
 } from 'lucide-react';
 
 const AppLayout = ({ children }) => {
@@ -35,6 +36,7 @@ const AppLayout = ({ children }) => {
     { name: 'Forecasts', href: `/forecasts/${activeCompany}`, icon: TrendingUp },
     { name: 'Products', href: `/products/${activeCompany}`, icon: Package },
     { name: 'Categories', href: `/categories/${activeCompany}`, icon: ShoppingBag },
+    { name: 'Upload Data', href: `/upload/${activeCompany}`, icon: Upload },
     // { name: 'Events', href: '/events', icon: Calendar },
     // { name: 'Weather', href: '/weather', icon: Cloud },
   ];

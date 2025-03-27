@@ -2,8 +2,12 @@
  * API client for the Sheffield Sales Forecast application
  */
 
+import { API_URL } from '../utils/apiConfig';
+
 // Base API URL
-const API_BASE = '/api/v1';
+//const API_BASE = '/api/v1';
+
+const API_BASE = API_URL;
 
 /**
  * Default fetch error handler
@@ -31,7 +35,9 @@ const handleFetchError = async (response) => {
  * Generic API request function
  */
 const apiRequest = async (endpoint, options = {}) => {
-  const url = `${API_BASE}${endpoint}`;
+  // If endpoint starts with /, remove it to avoid double slashes
+  const cleanEndpoint = endpoint.startsWith('/') ? endpoint.substring(1) : endpoint;
+  const url = `${API_BASE}/${cleanEndpoint}`;
   
   const defaultOptions = {
     headers: {

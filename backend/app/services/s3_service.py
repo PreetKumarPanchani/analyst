@@ -260,3 +260,28 @@ class S3Service:
             data_logger.error(f"Error deleting file from S3: {str(e)}")
             data_logger.error(traceback.format_exc())
             return False 
+    
+    def check_if_directory_exists(self, s3_key: str) -> bool:
+        """
+        Check if a directory exists in S3
+        
+        Args:
+            s3_key: S3 key (path) of the directory
+            
+        Returns:
+            True if directory exists, False otherwise
+        """
+        if not self.use_s3:
+            return False
+        
+        try:
+            self.s3_client.head_object(Bucket=self.bucket_name, Key=s3_key)
+            return True
+        except ClientError as e:
+            if e.response['Error']['Code'] == '404':
+                return False
+            else:
+                data_logger.error(f"Error checking if directory exists in S3: {str(e)}")
+                data_logger.error(traceback.format_exc())
+                return False    
+        

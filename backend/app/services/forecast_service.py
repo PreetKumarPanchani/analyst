@@ -277,11 +277,15 @@ class ForecastService:
             processed_data = self.processor.load_processed_data(company)
             
             if not processed_data or "daily_sales" not in processed_data:
-                data_logger.error(f"No daily sales data available for company: {company}")
-                return {
-                    "success": False,
-                    "error": f"No data available for company: {company}"
-                }
+                data_logger.info(f"No daily sales data available for company: {company}, processing data")
+                ## Process the data
+                processed_data = self.processor.process_company_data(company)
+
+                #data_logger.error(f"No daily sales data available for company: {company}")
+                #return {
+                #    "success": False,
+                #    "error": f"No data available for company: {company}"
+                #}
             
             daily_sales = processed_data["daily_sales"]
             
@@ -429,11 +433,15 @@ class ForecastService:
             processed_data = self.processor.load_processed_data(company)
             
             if not processed_data or "category_sales" not in processed_data:
-                data_logger.error(f"No category sales data available for company: {company}")
-                return {
-                    "success": False,
-                    "error": f"No data available for company: {company}"
-                }
+                data_logger.info(f"No category sales data available for company: {company}, processing data")
+                ## Process the data
+                processed_data = self.processor.process_company_data(company)
+
+                #data_logger.error(f"No category sales data available for company: {company}")
+                #return {
+                #    "success": False,
+                #    "error": f"No data available for company: {company}"
+                #}
             
             category_sales = processed_data["category_sales"]
             
@@ -591,11 +599,15 @@ class ForecastService:
             processed_data = self.processor.load_processed_data(company)
             
             if not processed_data or "product_sales" not in processed_data:
-                data_logger.error(f"No product sales data available for company: {company}")
-                return {
-                    "success": False,
-                    "error": f"No data available for company: {company}"
-                }
+                data_logger.info(f"No product sales data available for company: {company}, processing data")
+                ## Process the data
+                processed_data = self.processor.process_company_data(company)
+
+                #data_logger.error(f"No product sales data available for company: {company}")
+                #return {
+                #    "success": False,
+                #    "error": f"No data available for company: {company}"
+                #}
             
             product_sales = processed_data["product_sales"]
             
@@ -727,12 +739,19 @@ class ForecastService:
             List of top products with sales data
         """
         try:
+            data_logger.info(f"Getting top products for company: {company}")
+
+            
             # Load processed data
             processed_data = self.processor.load_processed_data(company)
             
             if not processed_data or "product_sales" not in processed_data:
-                data_logger.error(f"No product sales data available for company: {company}")
-                return []
+                data_logger.info(f"No product sales data available for company: {company}, processing data")
+                ## Process the data
+                processed_data = self.processor.process_company_data(company)
+
+                #data_logger.error(f"No product sales data available for company: {company}")
+                #return []
             
             product_sales = processed_data["product_sales"]
             
@@ -777,8 +796,12 @@ class ForecastService:
             processed_data = self.processor.load_processed_data(company)
             
             if not processed_data or "category_sales" not in processed_data:
-                data_logger.error(f"No category sales data available for company: {company}")
-                return []
+                data_logger.info(f"No category sales data available for company: {company}, processing data")
+                ## Process the data
+                processed_data = self.processor.process_company_data(company)
+
+                #data_logger.error(f"No category sales data available for company: {company}")
+                #return []
             
             category_sales = processed_data["category_sales"]
             
@@ -812,8 +835,12 @@ class ForecastService:
             print(processed_data)
             
             if not processed_data or "product_sales" not in processed_data:
-                data_logger.error(f"No product sales data available for company: {company}")
-                return []
+                data_logger.info(f"No product sales data available for company: {company}, processing data")
+                ## Process the data
+                processed_data = self.processor.process_company_data(company)
+
+                #data_logger.error(f"No product sales data available for company: {company}")
+                #return []
             
             product_sales = processed_data["product_sales"]
             

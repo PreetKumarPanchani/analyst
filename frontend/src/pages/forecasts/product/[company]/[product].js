@@ -4,6 +4,7 @@ import AppLayout from '../../../../components/layout/AppLayout';
 import ProductForecastView from '../../../../components/dashboard/ProductForecastView';
 import LoadingSpinner from '../../../../components/common/LoadingSpinner';
 import ErrorDisplay from '../../../../components/common/ErrorDisplay';
+import { fetchApi } from '../../../../utils/apiConfig';
 
 const ProductForecastPage = () => {
   const router = useRouter();
@@ -24,10 +25,7 @@ const ProductForecastPage = () => {
     // Verify product exists for this company
     const validateProduct = async () => {
       try {
-        const res = await fetch(`/api/v1/sales/products/${company}`);
-        if (!res.ok) throw new Error(`Failed to fetch products: ${res.status}`);
-        
-        const products = await res.json();
+        const products = await fetchApi(`/api/v1/sales/products/${company}`);
         const isValid = products.includes(decodeURIComponent(product));
         
         if (!isValid) {

@@ -6,6 +6,7 @@ import LoadingSpinner from '../../components/common/LoadingSpinner';
 import ErrorDisplay from '../../components/common/ErrorDisplay';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Package, Search, ChevronDown, Filter, ArrowUpDown, ArrowRight } from 'lucide-react';
+import { fetchApi } from '../../utils/apiConfig';
 
 const ProductsPage = () => {
   const router = useRouter();
@@ -19,6 +20,7 @@ const ProductsPage = () => {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [sortBy, setSortBy] = useState('name');
   const [sortOrder, setSortOrder] = useState('asc');
+
 
   // Commented out for now as we don't need it
   /*
@@ -97,10 +99,7 @@ const ProductsPage = () => {
         setLoading(true);
         
         // Fetch categories first
-        const categoriesRes = await fetch(`/api/v1/sales/categories/${company}`);
-        if (!categoriesRes.ok) throw new Error(`Failed to fetch categories: ${categoriesRes.status}`);
-        
-        const categoriesData = await categoriesRes.json();
+        const categoriesData = await fetchApi(`/api/v1/sales/categories/${company}`);
         setCategories(categoriesData);
         
         // Fetch products with proper category filtering
@@ -108,17 +107,11 @@ const ProductsPage = () => {
           ? `/api/v1/sales/products/${company}?category=${encodeURIComponent(selectedCategory)}`
           : `/api/v1/sales/products/${company}`;
           
-        const productsRes = await fetch(productsUrl);
-        if (!productsRes.ok) throw new Error(`Failed to fetch products: ${productsRes.status}`);
-        
-        const productsData = await productsRes.json();
+        const productsData = await fetchApi(productsUrl);
         setProducts(productsData);
         
         // Fetch top products
-        const topProductsRes = await fetch(`/api/v1/sales/top-products/${company}?limit=10`);
-        if (!topProductsRes.ok) throw new Error(`Failed to fetch top products: ${topProductsRes.status}`);
-        
-        const topProductsData = await topProductsRes.json();
+        const topProductsData = await fetchApi(`/api/v1/sales/top-products/${company}?limit=10`);
         setTopProducts(topProductsData);
         
       } catch (err) {

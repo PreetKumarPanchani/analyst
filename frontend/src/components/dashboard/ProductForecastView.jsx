@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { LineChart, Line, BarChart, Bar, AreaChart, Area, 
          XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Brush } from 'recharts';
 import { ArrowLeft, RefreshCw, DownloadCloud, Info } from 'lucide-react';
+import { fetchApi } from '../../utils/apiConfig';
 
 const ProductForecastView = ({ company = 'forge', initialProduct = null }) => {
   const [loading, setLoading] = useState(true);
@@ -14,9 +15,7 @@ const ProductForecastView = ({ company = 'forge', initialProduct = null }) => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await fetch(`/api/v1/sales/products/${company}`);
-        if (!res.ok) throw new Error(`Failed to fetch products: ${res.status}`);
-        const data = await res.json();
+        const data = await fetchApi(`/api/v1/sales/products/${company}`);
         setProducts(data);
         
         // If no initial product is selected, use the first one
@@ -44,9 +43,7 @@ const ProductForecastView = ({ company = 'forge', initialProduct = null }) => {
     setGenerating(true);
     try {
       const queryParams = forceRetrain ? '?force_retrain=true' : '';
-      const res = await fetch(`/api/v1/forecasts/product/${company}/${encodeURIComponent(product)}${queryParams}`);
-      if (!res.ok) throw new Error(`Failed to fetch forecast: ${res.status}`);
-      const data = await res.json();
+      const data = await fetchApi(`/api/v1/forecasts/product/${company}/${encodeURIComponent(product)}${queryParams}`);
       setForecast(data);
     } catch (err) {
       console.error("Error fetching product forecast:", err);

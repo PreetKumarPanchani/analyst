@@ -4,6 +4,7 @@ import {
   Droplets, CloudSun, AlertTriangle, RefreshCw, Calendar
 } from 'lucide-react';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { fetchApi } from '../../utils/apiConfig';
 
 const WeatherDashboard = () => {
   const [currentWeather, setCurrentWeather] = useState(null);
@@ -21,15 +22,11 @@ const WeatherDashboard = () => {
     setLoading(true);
     try {
       // Fetch current weather
-      const currentRes = await fetch('/api/v1/external/weather/current');
-      if (!currentRes.ok) throw new Error(`Failed to fetch current weather: ${currentRes.status}`);
-      const currentData = await currentRes.json();
+      const currentData = await fetchApi('/api/v1/external/weather/current');
       setCurrentWeather(currentData);
       
       // Fetch forecast
-      const forecastRes = await fetch('/api/v1/external/weather/forecast?days=7');
-      if (!forecastRes.ok) throw new Error(`Failed to fetch forecast: ${forecastRes.status}`);
-      const forecastData = await forecastRes.json();
+      const forecastData = await fetchApi('/api/v1/external/weather/forecast?days=7');
       setForecast(forecastData);
       
       // Fetch historical data (last 30 days)
@@ -40,9 +37,7 @@ const WeatherDashboard = () => {
       const startDate = thirtyDaysAgo.toISOString().split('T')[0];
       const endDate = today.toISOString().split('T')[0];
       
-      const historicalRes = await fetch(`/api/v1/external/weather/historical?start_date=${startDate}&end_date=${endDate}`);
-      if (!historicalRes.ok) throw new Error(`Failed to fetch historical weather: ${historicalRes.status}`);
-      const historicalData = await historicalRes.json();
+      const historicalData = await fetchApi(`/api/v1/external/weather/historical?start_date=${startDate}&end_date=${endDate}`);
       setHistorical(historicalData);
     } catch (err) {
       console.error("Error fetching weather data:", err);

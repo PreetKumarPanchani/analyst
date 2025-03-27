@@ -7,6 +7,7 @@ import ErrorDisplay from '../../../../components/common/ErrorDisplay';
 import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Brush } from 'recharts';
 import { ArrowLeft, RefreshCw, Calendar, TrendingUp, Package } from 'lucide-react';
 import { formatDate } from '../../../../utils/formatters';
+import { fetchApi } from '../../../../utils/apiConfig';
 
 const CategoryForecastPage = () => {
   const router = useRouter();
@@ -26,23 +27,11 @@ const CategoryForecastPage = () => {
         
         // Fetch category forecast
         const decodedCategory = decodeURIComponent(category);
-        const forecastRes = await fetch(`/api/v1/forecasts/category/${company}/${decodedCategory}`);
-        
-        if (!forecastRes.ok) {
-          throw new Error(`Failed to fetch category forecast: ${forecastRes.status}`);
-        }
-        
-        const forecastData = await forecastRes.json();
+        const forecastData = await fetchApi(`/api/v1/forecasts/category/${company}/${decodedCategory}`);
         setForecast(forecastData);
         
         // Fetch products in this category
-        const productsRes = await fetch(`/api/v1/sales/products/${company}?category=${decodedCategory}`);
-        
-        if (!productsRes.ok) {
-          throw new Error(`Failed to fetch products: ${productsRes.status}`);
-        }
-        
-        const productsData = await productsRes.json();
+        const productsData = await fetchApi(`/api/v1/sales/products/${company}?category=${decodedCategory}`);
         setProducts(productsData);
       } catch (err) {
         console.error("Error fetching category data:", err);
@@ -63,15 +52,9 @@ const CategoryForecastPage = () => {
       
       // Force retrain the model
       const decodedCategory = decodeURIComponent(category);
-      const res = await fetch(
+      const data = await fetchApi(
         `/api/v1/forecasts/category/${company}/${decodedCategory}?force_retrain=true`
       );
-      
-      if (!res.ok) {
-        throw new Error(`Failed to regenerate forecast: ${res.status}`);
-      }
-      
-      const data = await res.json();
       setForecast(data);
     } catch (err) {
       console.error("Error regenerating forecast:", err);
