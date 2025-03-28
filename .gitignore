@@ -91,4 +91,8 @@ backend/data/raw*
 DataStatusIndicator.jsx
 
 
+# No include  .pyc files
+*.pyc
+
+
 
