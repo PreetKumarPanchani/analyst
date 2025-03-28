@@ -57,8 +57,37 @@ export const fetchApi = async (endpoint, options = {}) => {
   }
 };
 
+
+
+// Function to check if data exists for a company
+export const checkCompanyDataStatus = async (company) => {
+    try {
+      const result = await fetchApi(`/api/v1/uploads/data-status/${company}`);
+      return result.has_data;
+    } catch (error) {
+      console.error(`Error checking data status for ${company}:`, error);
+      // Default to false on error
+      return false;
+    }
+  };
+  
+// Function to delete all data for a company
+export const deleteCompanyData = async (company) => {
+    try {
+      const result = await fetchApi(`/api/v1/uploads/data/${company}`, {
+        method: 'DELETE',
+      });
+      return result.success;
+    } catch (error) {
+      console.error(`Error deleting data for ${company}:`, error);
+      throw error;
+    }
+  };
+
 export default {
   API_URL,
   getApiUrl,
-  fetchApi
+  fetchApi,
+  checkCompanyDataStatus,
+  deleteCompanyData
 }; 

@@ -6,7 +6,8 @@ import LoadingSpinner from '../../components/common/LoadingSpinner';
 import ErrorDisplay from '../../components/common/ErrorDisplay';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Package, Search, ChevronDown, Filter, ArrowUpDown, ArrowRight } from 'lucide-react';
-import { fetchApi } from '../../utils/apiConfig';
+import { fetchApi, checkCompanyDataStatus } from '../../utils/apiConfig';
+import EmptyStateDisplay from '../../components/common/EmptyStateDisplay';
 
 const ProductsPage = () => {
   const router = useRouter();
@@ -20,70 +21,7 @@ const ProductsPage = () => {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [sortBy, setSortBy] = useState('name');
   const [sortOrder, setSortOrder] = useState('asc');
-
-
-  // Commented out for now as we don't need it
-  /*
-  useEffect(() => {
-    if (!company) return;
-
-    if (!['forge', 'cpl'].includes(company)) {
-      router.replace('/dashboard/forge');
-      return;
-    }
-
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        
-        // Fetch all products
-        const productsRes = await fetch(`/api/v1/sales/products/${company}`);
-        if (!productsRes.ok) throw new Error(`Failed to fetch products: ${productsRes.status}`);
-        
-        const productsData = await productsRes.json();
-        setProducts(productsData);
-        
-        // Fetch top products
-        const topProductsRes = await fetch(`/api/v1/sales/top-products/${company}?limit=10`);
-        if (!topProductsRes.ok) throw new Error(`Failed to fetch top products: ${topProductsRes.status}`);
-        
-        const topProductsData = await topProductsRes.json();
-        setTopProducts(topProductsData);
-        
-        // Fetch categories
-        const categoriesRes = await fetch(`/api/v1/sales/categories/${company}`);
-        if (!categoriesRes.ok) throw new Error(`Failed to fetch categories: ${categoriesRes.status}`);
-        
-        const categoriesData = await categoriesRes.json();
-        setCategories(categoriesData);
-      } catch (err) {
-        console.error("Error fetching products data:", err);
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [company, router]);
-
-  // Filter and sort products
-  const filteredProducts = products.filter(product => {
-    // Apply category filter if selected
-    if (selectedCategory && !product.includes(selectedCategory)) {
-      return false;
-    }
-    
-    // Apply search query filter
-    if (searchQuery && !product.toLowerCase().includes(searchQuery.toLowerCase())) {
-      return false;
-    }
-    
-    return true;
-  });
-
-  */
-
+  const [hasData, setHasData] = useState(true); // Default to true until we check
 
   // useEffect for fetching data
   useEffect(() => {
@@ -94,7 +32,26 @@ const ProductsPage = () => {
       return;
     }
 
-    const fetchData = async () => {
+    // Check if data exists for this company
+    const checkDataStatus = async () => {
+      try {
+        const exists = await checkCompanyDataStatus(company);
+        setHasData(exists);
+        if (!exists) {
+          // If no data exists, stop loading and return early
+          setLoading(false);
+          return;
+        }
+      } catch (err) {
+        console.error("Error checking data status:", err);
+        // Continue as if data exists in case of error
+      }
+      
+      // Only fetch data if company has data
+      fetchProductsData();
+    };
+
+    const fetchProductsData = async () => {
       try {
         setLoading(true);
         
@@ -122,7 +79,7 @@ const ProductsPage = () => {
       }
     };
 
-    fetchData();
+    checkDataStatus();
   }, [company, selectedCategory, router]);
 
   // Only apply search filter client-side
@@ -196,6 +153,36 @@ const ProductsPage = () => {
           actionText="Go to Dashboard"
           actionHref={`/dashboard/${company}`}
         />
+      </AppLayout>
+    );
+  }
+
+  if (!hasData) {
+    return (
+      <AppLayout>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* <div className="text-center py-12">
+            <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <h2 className="text-2xl font-medium text-gray-900">No Data Available</h2>
+            <p className="mt-2 text-gray-500">There is currently no data for {company}. Upload data to view products.</p>
+            <div className="mt-6 space-x-4">
+              <Link href={`/upload/${company}`} className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">
+                Upload Data
+              </Link>
+              <Link href={`/dashboard/${company}`} className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50">
+                Return to Dashboard
+              </Link>
+            </div>
+            </div> */}
+
+          <EmptyStateDisplay
+            title="No Data Available"
+            message={`There is currently no data for ${company}. Upload data to view products.`}
+            type="noData"
+            company={company}
+            showUploadLink={true}
+          />
+        </div>
       </AppLayout>
     );
   }

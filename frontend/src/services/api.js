@@ -187,12 +187,37 @@ export const weatherApi = {
     apiRequest(`/external/weather/historical?start_date=${startDate}&end_date=${endDate}`),
 };
 
+
+// New Upload endpoints
+export const uploadApi = {
+  uploadFile: (company, file) => {
+    const formData = new FormData();
+    formData.append('company', company);
+    formData.append('file', file);
+    
+    return apiRequest(`/uploads/file`, {
+      method: 'POST',
+      headers: {
+        // Remove Content-Type header to let the browser set it with boundary
+      },
+      body: formData
+    });
+  },
+  
+  checkDataStatus: (company) => apiRequest(`/uploads/data-status/${company}`),
+  
+  deleteData: (company) => apiRequest(`/uploads/data/${company}`, {
+    method: 'DELETE'
+  }),
+};
+
 // Export combined API object
 const api = {
   sales: salesApi,
   forecast: forecastApi,
   events: eventsApi,
   weather: weatherApi,
+  upload: uploadApi,
 };
 
 export default api;

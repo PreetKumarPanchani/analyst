@@ -2,6 +2,7 @@ import { useRouter } from 'next/router';
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import AppLayout from '../../components/layout/AppLayout';
+import { checkCompanyDataStatus } from '../../utils/apiConfig';
 
 const UploadPage = () => {
   const router = useRouter();
@@ -12,6 +13,9 @@ const UploadPage = () => {
   const [error, setError] = useState(null);
   const [uploadStatus, setUploadStatus] = useState('');
   const fileInputRef = useRef(null);
+  const [hasExistingData, setHasExistingData] = useState(false);
+  const [mergeMode, setMergeMode] = useState('auto');
+  const [checkingDataStatus, setCheckingDataStatus] = useState(true);
 
   // Validate company parameter
   useEffect(() => {
@@ -19,6 +23,26 @@ const UploadPage = () => {
       router.replace('/upload/forge');
     }
   }, [company, router]);
+
+  useEffect(() => {
+    if (!company) return;
+    
+    const checkDataStatus = async () => {
+      setCheckingDataStatus(true);
+      try {
+        const exists = await checkCompanyDataStatus(company);
+        setHasExistingData(exists);
+      } catch (err) {
+        console.error("Error checking data status:", err);
+        // Default to assuming no data in case of error
+        setHasExistingData(false);
+      } finally {
+        setCheckingDataStatus(false);
+      }
+    };
+    
+    checkDataStatus();
+  }, [company]);
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
@@ -51,6 +75,11 @@ const UploadPage = () => {
       formData.append('company', company);
       formData.append('file', file);
       
+      // Add merge mode if provided
+      if (mergeMode !== 'auto') {
+        formData.append('merge_mode', mergeMode);
+      }
+      
       // Get the backend URL (defaulting to localhost in development)
       const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001/api/v1';
       
@@ -77,6 +106,7 @@ const UploadPage = () => {
       // Wait for processing to complete
       const result = await response.json();
       
+      setHasExistingData(true); // Update data status after successful upload
       setUploadComplete(true);
       setUploadStatus('Upload and processing complete!');
     } catch (err) {
@@ -156,6 +186,49 @@ const UploadPage = () => {
           <div className="p-6">
             {!uploadComplete ? (
               <form onSubmit={handleSubmit} className="space-y-6">
+                {hasExistingData && (
+                  <div className="mb-6">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Data Handling
+                    </label>
+                    <div className="mt-2 bg-blue-50 p-4 rounded-md border border-blue-200">
+                      <p className="text-sm text-blue-800 mb-3">
+                        <strong> Data Upload Options </strong>
+                      </p>
+                      <div className="flex items-center space-x-4">
+                        <div className="flex items-center">
+                          <input
+                            id="merge-auto"
+                            name="merge-mode"
+                            type="radio"
+                            value="auto"
+                            checked={mergeMode === 'auto'}
+                            onChange={() => setMergeMode('auto')}
+                            className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                          />
+                          <label htmlFor="merge-auto" className="ml-2 block text-sm text-gray-700">
+                            Auto-merge
+                          </label>
+                        </div>
+                        <div className="flex items-center">
+                          <input
+                            id="merge-replace"
+                            name="merge-mode"
+                            type="radio"
+                            value="replace"
+                            checked={mergeMode === 'replace'}
+                            onChange={() => setMergeMode('replace')}
+                            className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                          />
+                          <label htmlFor="merge-replace" className="ml-2 block text-sm text-gray-700">
+                            Replace all data
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Upload Excel File
@@ -164,7 +237,7 @@ const UploadPage = () => {
                     <div className="space-y-1 text-center">
                       <div className="flex text-sm text-gray-600">
                         <label htmlFor="file-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
-                          <span>Upload a file</span>
+                          <span >Upload a file</span>
                           <input 
                             id="file-upload" 
                             name="file-upload" 
@@ -175,10 +248,10 @@ const UploadPage = () => {
                             accept=".xlsx,.xls"
                           />
                         </label>
-                        <p className="pl-1">or drag and drop</p>
+                        
                       </div>
                       <p className="text-xs text-gray-500">
-                        Excel files only (.xlsx, .xls)
+                        Excel (.xlsx, .xls)
                       </p>
                     </div>
                   </div>

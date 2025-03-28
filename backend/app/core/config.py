@@ -65,6 +65,7 @@ class Settings(BaseSettings):
     S3_MERGED_DATA_PREFIX: str = "merged_dataset_without_metadata/"
     S3_TEMP_PREFIX: str = "temp/"
     
+    
     # Location settings
     LOCATION_COORDINATES: Dict[str, Dict[str, float]] = {
         "sheffield": {

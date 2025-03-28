@@ -239,6 +239,33 @@ class ForecastService:
         return extended_df
 
     
+    def check_company_data_exists(self, company: str) -> bool:
+        """
+        Check if data exists for a company before attempting forecasting
+        
+        Args:
+            company: Company name
+            
+        Returns:
+            True if data exists, False otherwise
+        """
+        try:
+            data_logger.info(f"Checking if data exists for company: {company}")
+            
+            # Use data loader to check for data
+            from app.data.loader import DataLoader
+            loader = DataLoader()
+            
+            has_data = loader.has_company_data(company)
+            
+            data_logger.info(f"Data exists for company {company}: {has_data}")
+            return has_data
+            
+        except Exception as e:
+            data_logger.error(f"Error checking data existence: {str(e)}")
+            data_logger.error(traceback.format_exc())
+            return False
+
     def forecast_company_revenue(self, 
                                company: str, 
                                periods: int = 15,
@@ -263,6 +290,18 @@ class ForecastService:
         try:
             # Model identifier
             model_id = f"{company}_revenue"
+            
+            # Check if data exists for this company
+            has_data = self.check_company_data_exists(company)
+            
+            if not has_data:
+                data_logger.warning(f"No data available for company: {company}")
+                return {
+                    "success": False,
+                    "error": f"No data available for company: {company}",
+                    "has_data": False
+                }
+            
             if not self.use_s3:
                 os.makedirs("debug", exist_ok=True)
             
@@ -416,6 +455,17 @@ class ForecastService:
             Forecast dictionary
         """
         try:
+            # Check if data exists for this company
+            has_data = self.check_company_data_exists(company)
+            
+            if not has_data:
+                data_logger.warning(f"No data available for company: {company}")
+                return {
+                    "success": False,
+                    "error": f"No data available for company: {company}",
+                    "has_data": False
+                }
+            
             # Model identifier - make safe for filename
             safe_category = category.replace(" ", "_").replace("/", "_")
             model_id = f"{company}_{safe_category}_category"
@@ -581,6 +631,17 @@ class ForecastService:
             Forecast dictionary
         """
         try:
+            # Check if data exists for this company
+            has_data = self.check_company_data_exists(company)
+            
+            if not has_data:
+                data_logger.warning(f"No data available for company: {company}")
+                return {
+                    "success": False,
+                    "error": f"No data available for company: {company}",
+                    "has_data": False
+                }
+            
             # Model identifier - replace spaces and special chars
             safe_product = product.replace(" ", "_").replace("(", "").replace(")", "").replace(",", "").replace("-", "_").replace("/", "_")
             model_id = f"{company}_{safe_product}_product"
@@ -829,6 +890,13 @@ class ForecastService:
             List of product names
         """
         try:
+            data_logger.info(f"Getting products for company: {company}, category: {category if category else 'all'}")
+
+            if not self.check_company_data_exists(company):
+                data_logger.error(f"No data available for company: {company}")
+                return []
+        
+
             # Load processed data
             processed_data = self.processor.load_processed_data(company)
 
@@ -887,6 +955,32 @@ class ForecastService:
             data_logger.error(traceback.format_exc())
             return []
     
+    def check_company_data_exists(self, company: str) -> bool:
+        """
+        Check if data exists for a company before attempting forecasting
+        
+        Args:
+            company: Company name
+            
+        Returns:
+            True if data exists, False otherwise
+        """
+        try:
+            data_logger.info(f"Checking if data exists for company: {company}")
+            
+            # Use data loader to check for data
+            from app.data.loader import DataLoader
+            loader = DataLoader()
+            
+            has_data = loader.has_company_data(company)
+            
+            data_logger.info(f"Data exists for company {company}: {has_data}")
+            return has_data
+            
+        except Exception as e:
+            data_logger.error(f"Error checking data existence: {str(e)}")
+            data_logger.error(traceback.format_exc())
+            return False
 
 def test_forecast_service():
     """Test the ForecastService functionality"""

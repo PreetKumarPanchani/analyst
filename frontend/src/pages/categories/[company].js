@@ -6,7 +6,8 @@ import LoadingSpinner from '../../components/common/LoadingSpinner';
 import ErrorDisplay from '../../components/common/ErrorDisplay';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Calendar, TrendingUp, Package, ArrowRight } from 'lucide-react';
-import { fetchApi } from '../../utils/apiConfig';
+import { fetchApi, checkCompanyDataStatus } from '../../utils/apiConfig';
+import EmptyStateDisplay from '../../components/common/EmptyStateDisplay';
 
 const CategoryPage = () => {
   const router = useRouter();
@@ -18,6 +19,7 @@ const CategoryPage = () => {
   const [categoryForecast, setCategoryForecast] = useState(null);
   const [products, setProducts] = useState([]);
   const [loadingForecast, setLoadingForecast] = useState(false);
+  const [hasData, setHasData] = useState(true); // Default to true until we check
 
   // Fetch categories when company param is available
   useEffect(() => {
@@ -27,6 +29,25 @@ const CategoryPage = () => {
       router.replace('/dashboard/forge');
       return;
     }
+
+    // Check if data exists for this company first
+    const checkDataStatus = async () => {
+      try {
+        const exists = await checkCompanyDataStatus(company);
+        setHasData(exists);
+        if (!exists) {
+          // If no data exists, stop loading and return early
+          setLoading(false);
+          return;
+        }
+      } catch (err) {
+        console.error("Error checking data status:", err);
+        // Continue as if data exists in case of error
+      }
+      
+      // Only fetch categories if company has data
+      fetchCategories();
+    };
 
     const fetchCategories = async () => {
       try {
@@ -47,7 +68,7 @@ const CategoryPage = () => {
       }
     };
 
-    fetchCategories();
+    checkDataStatus();
   }, [company, router]);
 
   // Fetch category forecast and products when a category is selected
@@ -111,18 +132,32 @@ const CategoryPage = () => {
     );
   }
 
-  if (categories.length === 0) {
+  if (!hasData || categories.length === 0) {
     return (
       <AppLayout>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center py-12">
+          
+          {/* <div className="text-center py-12">
             <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h2 className="text-2xl font-medium text-gray-900">No Categories Found</h2>
-            <p className="mt-2 text-gray-500">There are no product categories available for {company}.</p>
-            <Link href={`/dashboard/${company}`} className="mt-6 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">
+            <h2 className="text-2xl font-medium text-gray-900">No Data Available</h2>
+            <p className="mt-2 text-gray-500">There is currently no data for {company}. Upload data to view categories.</p>
+            <div className="mt-6 space-x-4">
+              <Link href={`/upload/${company}`} className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">
+                Upload Data
+              </Link>
+              <Link href={`/dashboard/${company}`} className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50">
                 Return to Dashboard
-            </Link>
-          </div>
+              </Link>
+            </div>
+          </div> */}
+
+          <EmptyStateDisplay
+            title="No Data Available"
+            message={`There is currently no data for ${company}. Upload data to view categories.`}
+            type="noData"
+            company={company}
+            showUploadLink={true}
+          />
         </div>
       </AppLayout>
     );

@@ -853,10 +853,10 @@ def test_events_service():
     prophet_data_7_period.to_csv("prophet_data_7_period.csv", index=False)
     
 
-    print(f"Prophet data: {len(prophet_data)} rows")
-    print(f"Columns: {prophet_data.columns.tolist()}")
-    print(f"Events in period: {prophet_data['event'].sum()}")
-    print(f"Sample data:\n{prophet_data[prophet_data['event'] == 1].head()}")
+    #print(f"Prophet data: {len(prophet_data)} rows")
+    #print(f"Columns: {prophet_data.columns.tolist()}")
+    #print(f"Events in period: {prophet_data['event'].sum()}")
+    #print(f"Sample data:\n{prophet_data[prophet_data['event'] == 1].head()}")
     
     return "Events service test completed successfully"
 

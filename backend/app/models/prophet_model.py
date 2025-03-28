@@ -8,6 +8,8 @@ import json
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any, Tuple
 import traceback
+import time
+
 
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -886,7 +888,6 @@ class ProphetModel:
                 
                 # Convert model_json to string if it's not already
                 if isinstance(model_json, dict):
-                    import json
                     model_json = json.dumps(model_json)
                 
                 # Use put_object directly with string body
@@ -1018,7 +1019,7 @@ def test_prophet_model():
         # Add time features
         prophet_df = model.add_time_features(prophet_df)
 
-        print(f"Prophet dataframe: {prophet_df.head()}")
+        #print(f"Prophet dataframe: {prophet_df.head()}")
         
         # Create directory if it doesn't exist
         data_dir = os.path.join("data", company, "revenue")

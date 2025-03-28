@@ -8,6 +8,8 @@ import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, L
 import { TrendingUp, Calendar, Package, ShoppingBag, ArrowRight, RefreshCw } from 'lucide-react';
 import { formatDate, formatCurrency } from '../../utils/formatters';
 import api from '../../services/api';
+import { checkCompanyDataStatus } from '../../utils/apiConfig';
+import EmptyStateDisplay from '../../components/common/EmptyStateDisplay';
 
 const ForecastsPage = () => {
   const router = useRouter();
@@ -21,6 +23,7 @@ const ForecastsPage = () => {
   const [categoryForecast, setCategoryForecast] = useState(null);
   const [loadingCategory, setLoadingCategory] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [hasData, setHasData] = useState(true); // Default to true until we check
 
   useEffect(() => {
     if (!company) return;
@@ -30,7 +33,26 @@ const ForecastsPage = () => {
       return;
     }
 
-    const fetchData = async () => {
+    // Check if data exists for this company
+    const checkDataStatus = async () => {
+      try {
+        const exists = await checkCompanyDataStatus(company);
+        setHasData(exists);
+        if (!exists) {
+          // If no data exists, stop loading and return early
+          setLoading(false);
+          return;
+        }
+      } catch (err) {
+        console.error("Error checking data status:", err);
+        // Continue as if data exists in case of error
+      }
+      
+      // Only fetch data if company has data
+      fetchForecastData();
+    };
+
+    const fetchForecastData = async () => {
       try {
         setLoading(true);
         
@@ -70,7 +92,7 @@ const ForecastsPage = () => {
       }
     };
 
-    fetchData();
+    checkDataStatus();
   }, [company, router]);
 
   // Handle category selection
@@ -194,6 +216,36 @@ const ForecastsPage = () => {
           actionText="Go to Dashboard"
           actionHref={`/dashboard/${company}`}
         />
+      </AppLayout>
+    );
+  }
+
+  if (!hasData) {
+    return (
+      <AppLayout>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* <div className="text-center py-12">
+            <TrendingUp className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <h2 className="text-2xl font-medium text-gray-900">No Data Available</h2>
+            <p className="mt-2 text-gray-500">There is currently no data for {company}. Upload data to generate forecasts.</p>
+            <div className="mt-6 space-x-4">
+              <Link href={`/upload/${company}`} className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">
+                Upload Data
+              </Link>
+              <Link href={`/dashboard/${company}`} className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50">
+                Return to Dashboard
+              </Link>
+            </div>
+            </div> */}
+
+          <EmptyStateDisplay
+            title="No Data Available"
+            message={`There is currently no data for ${company}. Upload data to generate forecasts.`}
+            type="noData"
+            company={company}
+            showUploadLink={true}
+          />
+        </div>
       </AppLayout>
     );
   }
