@@ -1,0 +1,94 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+env/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Node.js
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+.pnpm-debug.log
+.npm/
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+
+# Next.js
+.next/
+out/
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# VS Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# Data, logs and cache
+*.log
+logs/
+.cache/
+.pytest_cache/
+
+# OS specific
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Docker
+
+backend/.dockerignore
+
+# Backend
+backend/debug/
+backend/data/cache/
+backend/data/models/
+backend/data/forge/
+backend/data/cpl
+backend/data/merged_dataset_without_metadata/
+backend/data/new_data/
+backend/data/temp/
+backend/data/raw*
+
+# Not Include files with prev in the name
+*prev*
+
+# Not Inlcude the file with the name DataStatusIndicator
+DataStatusIndicator.jsx
+
+
+
